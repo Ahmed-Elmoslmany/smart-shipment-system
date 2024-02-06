@@ -1,0 +1,14 @@
+{
+  "name": "shipment-system",
+  "version": "1.0.0",
+  "description": "smart-shipment-system-graduation-project",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "Ahmed-Elmoslmany",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
