@@ -4,11 +4,15 @@
   "description": "smart-shipment-system-graduation-project",
   "main": "index.js",
   "scripts": {
+    "start": "nodemon server.js",
     "test": "test"
   },
   "author": "Ahmed-Elmoslmany",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2"
+    "dotenv": "^16.4.1",
+    "express": "^4.18.2",
+    "morgan": "^1.10.0",
+    "nodemon": "^3.0.3"
   }
 }
