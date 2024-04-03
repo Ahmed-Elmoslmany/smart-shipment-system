@@ -2,8 +2,7 @@ const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
-const randomstring = require('randomstring');
-
+const randomstring = require("randomstring");
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -18,18 +17,39 @@ const userSchema = new mongoose.Schema({
   phone: {
     type: String,
     max: 12,
-    min: 12
-  },
-  gender: {
-    String,
-    enum: ["male", "female"]
+    min: 12,
   },
   address: String,
-  birthDate: Date,
   profileImage: {
-    secureUrl: String, 
-    publicId: String
-},
+    secureUrl: String,
+    publicId: String,
+  },
+  role: {
+    type: String,
+    enum: ["client", "delivery", "admin"],
+  },
+
+  // Unorganized Delivery
+  geoState: String,
+
+  // Common on Unorganized and fixed delivery
+  vehicleType: String,
+  vehicleLicense: String,
+  deliveryApprovalImg:{
+    secureUrl: String,
+    publicId: String,
+  },
+  deliveryApproved: {
+    type: Boolean,
+    default: false,
+  },
+
+  // Fixed Delivery
+  geoStateStart: String,
+  geoStateEnd: String,
+  tripTime: String,
+  tripPeriod: Number,
+
   password: {
     type: String,
     require: [true, "User must have a password"],
@@ -52,26 +72,18 @@ const userSchema = new mongoose.Schema({
   confirmedEmail: {
     type: Boolean,
     default: false,
-
   },
   active: {
     type: Boolean,
     default: false,
     select: false,
   },
-  role: {
-    type: String,
-    enum: ["client", "delivery", "admin"]
-  },
-
-
-
 });
 
-userSchema.pre(/^find/, function(next){
+userSchema.pre(/^find/, function (next) {
   this.select("-__v");
   next();
-})
+});
 
 userSchema.pre("save", async function (next) {
   // function will excute only if password modified
@@ -100,9 +112,8 @@ userSchema.pre(/^find/, function (next) {
   3;
 
   console.log("top:", this.otp);
-      // ex: select all users that active proberty set to true
-      this.find( {$or: [{OTP: {$exists: true }}, {active: { $ne: false } }] });
-  
+  // ex: select all users that active proberty set to true
+  this.find({ $or: [{ OTP: { $exists: true } }, { active: { $ne: false } }] });
 
   next();
 });
@@ -113,8 +124,6 @@ userSchema.methods.correctPassword = async function (
 ) {
   return await bcrypt.compare(candidatePassword, userPassword);
 };
-
-
 
 userSchema.methods.passwordChangedAfterCreatedToken = function (JWTTimestamp) {
   if (this.passwordChangedAt) {
