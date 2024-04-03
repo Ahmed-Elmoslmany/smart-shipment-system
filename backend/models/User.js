@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
   phone: {
     type: String,
     max: 12,
-    min: 12,
+    min: 10,
   },
   address: String,
   profileImage: {
