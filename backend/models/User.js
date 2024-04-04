@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["client", "delivery", "admin"],
+    enum: ["client", "fix-delivery", "unorganized-delivery", "admin"],
   },
 
   // Unorganized Delivery
@@ -41,7 +41,6 @@ const userSchema = new mongoose.Schema({
   },
   deliveryApproved: {
     type: Boolean,
-    default: false,
   },
 
   // Fixed Delivery
