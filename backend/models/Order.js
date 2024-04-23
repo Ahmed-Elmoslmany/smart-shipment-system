@@ -33,23 +33,23 @@ const orderSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ["un-picked", "picked-up", "coming", "delivered"],
-    default: "un-picked"
+    default: "un-picked",
   },
   unPicked: {
     type: Boolean,
-    default: true
+    default: true,
   },
-  pickedUp:{
+  pickedUp: {
     type: Boolean,
-    default: false
+    default: false,
   },
-  coming:{
+  coming: {
     type: Boolean,
-    default: false
+    default: false,
   },
-  delivered:{
+  delivered: {
     type: Boolean,
-    default: false
+    default: false,
   },
   fromLng: {
     type: String,
@@ -70,6 +70,16 @@ const orderSchema = new mongoose.Schema({
   weight: String,
   quantity: Number,
   description: String,
+  delivery: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  client: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
 });
 
 const Order = mongoose.model("Order", orderSchema);

@@ -2,17 +2,6 @@ const Order = require("../models/Order");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 
-exports.createOrder = catchAsync(async (req, res) => {
-  const order = await Order.create(req.body);
-
-  res.status(201).json({
-    status: "success",
-    data: {
-      order,
-    },
-  });
-});
-
 exports.updateOrderStatus = catchAsync(async (req, res, next) => {
 
   const id = req.params.id;
@@ -69,4 +58,3 @@ exports.updateOrderStatus = catchAsync(async (req, res, next) => {
     message: "order status updated succussfully",
   });
 });
-
