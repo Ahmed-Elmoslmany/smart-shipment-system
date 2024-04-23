@@ -8,7 +8,8 @@ const bodyParser = require("body-parser");
 const {globalErrorController} = require('./controllers/errorsController')
 
 const userRouter = require("./Routes/userRoutes");
-const orderRouter = require("./Routes/orderRoutes");
+const clientRouter = require("./Routes/clientRoutes");
+const deliveryRouter = require("./Routes/deliveryRoutes");
 
 
 dotenv.config({ path: "./config.env" });
@@ -24,7 +25,8 @@ app.use(bodyParser.json());
 
 
 app.use("/api/v1/users", userRouter);
-app.use("/api/v1/orders", orderRouter);
+app.use("/api/v1/client/order", clientRouter);
+app.use("/api/v1/delivery/order", deliveryRouter);
 
 
 app.use( globalErrorController )

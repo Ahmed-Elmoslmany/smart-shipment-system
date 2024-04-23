@@ -58,3 +58,12 @@ exports.updateOrderStatus = catchAsync(async (req, res, next) => {
     message: "order status updated succussfully",
   });
 });
+
+exports.assignOrderToMe = catchAsync(async (req, res) => {
+    await Order.findByIdAndUpdate(req.params.id, {delivery: req.user.id}, {new: true});
+
+    res.status(200).json({
+        status: "success",
+        message: `order assigned you ${req.user.name} succussfully, Delivered it as fast as possible!`,
+      });
+})
