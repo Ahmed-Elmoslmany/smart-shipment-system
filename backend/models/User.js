@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
+    required: [true, "Phone is required"],
     max: 12,
     min: 10,
   },
@@ -26,7 +27,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["client", "fix-delivery", "unorganized-delivery", "admin"],
+    enum: ["client", "fixed-delivery", "unorganized-delivery", "admin"],
   },
 
   // Unorganized Delivery
