@@ -48,7 +48,7 @@ const userSchema = new mongoose.Schema({
   geoStateStart: String,
   geoStateEnd: String,
   tripTime: String,
-  tripPeriod: Number,
+  tripPeriod: Array,
 
   password: {
     type: String,
