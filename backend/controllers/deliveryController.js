@@ -1,6 +1,20 @@
 const Order = require("../models/Order");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
+const APIFeatures = require("../utils/APIFeatures");
+
+const ordersSummary = (orders) => {
+  const processedOrders = orders.map(order => ({
+    type: order.type,
+    client: order.client.name,
+    description: order.description,
+    status: order.status,
+    weight: order.weight,
+    quantity: order.quantity
+  }))
+
+  return processedOrders
+}
 
 exports.updateOrderStatus = catchAsync(async (req, res, next) => {
 
@@ -67,3 +81,32 @@ exports.assignOrderToMe = catchAsync(async (req, res) => {
         message: `order assigned you ${req.user.name} succussfully, Delivered it as fast as possible!`,
       });
 })
+
+exports.summary = catchAsync(async (req, res, nest) => {
+
+  const features = new APIFeatures(Order.find({delivery: req.user.id}), req.query)
+  .filter()
+  .limitFields()
+  .paginate();
+
+  const orders = await features.query.populate('client')
+
+  // const orders = await Order.find({delivery: req.user.id})
+
+  const processedOrders = ordersSummary(orders) // clarify the data
+  if(processedOrders.length > 0){
+    res.status(200).json({
+      status: 'success',
+      results: orders.length,
+      data: {
+        orders: processedOrders
+      },
+    });
+  }{
+    res.status(200).json({
+      status: 'success',
+      message: "There is no orders found"
+    });
+  }
+})
+

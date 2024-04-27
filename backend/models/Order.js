@@ -26,10 +26,6 @@ const orderSchema = new mongoose.Schema({
     max: 12,
     min: 10,
   },
-  delivery: {
-    type: mongoose.Types.ObjectId,
-    ref: "User",
-  },
   status: {
     type: String,
     enum: ["un-picked", "picked-up", "coming", "delivered"],
@@ -58,6 +54,14 @@ const orderSchema = new mongoose.Schema({
   fromLat: {
     type: String,
     require: [true, "please provide start location about the order"],
+  },
+  currentLng: {
+    type: String,
+    require: [true, "please provide current location about the order"],
+  },
+  currentLat: {
+    type: String,
+    require: [true, "please provide current location about the order"],
   },
   toLng: {
     type: String,
