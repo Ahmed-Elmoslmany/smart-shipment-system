@@ -5,6 +5,8 @@ const AppError = require("./../utils/appError");
 const User = require("./../models/User");
 const catchAsync = require("./../utils/catchAsync");
 const sendEmail = require("./../utils/email");
+const cloudinary = require("../utils/cloud");
+
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.SECRET_JWT, {
@@ -41,7 +43,11 @@ const createSendToken = (user, statusCode, res) => {
 };
 
 exports.signup = catchAsync(async (req, res, next) => {
+  
+ 
   const newUser = await User.create(req.body);
+  
+
 
   const signUpOTP = newUser.createUserOTP();
 

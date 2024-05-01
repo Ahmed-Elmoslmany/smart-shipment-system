@@ -6,7 +6,7 @@ const {uploadFileCloud} = require('../utils/multerCloud')
 const router= express.Router()
 
 
-router.route('/signup').post(authController.signup)
+router.route('/signup').post(uploadFileCloud().array("files"), authController.signup)
 router.route('/confirmAccount').post(authController.confirmAccount)
 router.route('/login').post(authController.login)
 

@@ -4,6 +4,19 @@ const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const randomstring = require("randomstring");
 
+const pointSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ['Point'],
+    required: true
+  },
+  coordinates: {
+    type: [Number],
+    required: true
+  }
+});
+
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -16,7 +29,7 @@ const userSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: [true, "Phone is required"],
+    // required: [true, "Phone is required"],
     max: 12,
     min: 10,
   },
@@ -36,15 +49,21 @@ const userSchema = new mongoose.Schema({
   // Common on Unorganized and fixed delivery
   vehicleType: String,
   vehicleLicense: String,
-  deliveryApprovalImg:{
-    secureUrl: String,
-    publicId: String,
-  },
+  deliveryApprovalImg: String,
   deliveryApproved: {
     type: Boolean,
+    default: false
   },
 
   // Fixed Delivery
+  startLoc: {
+    type: pointSchema,
+    required: true
+  },
+  endLoc: {
+    type: pointSchema,
+    required: true
+  },
   geoStateStart: String,
   geoStateEnd: String,
   tripTime: String,
@@ -79,6 +98,9 @@ const userSchema = new mongoose.Schema({
     select: false,
   },
 });
+
+userSchema.index({ startLoc: '2dsphere' });
+userSchema.index({ endLoc: '2dsphere' });
 
 userSchema.pre(/^find/, function (next) {
   this.select("-__v");
