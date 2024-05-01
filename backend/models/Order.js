@@ -1,11 +1,22 @@
 const mongoose = require("mongoose");
 
+const pointSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ['Point'],
+    required: true
+  },
+  coordinates: {
+    type: [Number],
+    required: true
+  }
+});
+
 const orderSchema = new mongoose.Schema({
   type: {
     type: String,
     require: [true, "please provide order type"],
   },
-
   recipentName: {
     type: String,
     require: [true, "please provide reciepent name"],
@@ -25,6 +36,18 @@ const orderSchema = new mongoose.Schema({
     required: [true, "please provide sender phone number"],
     max: 12,
     min: 10,
+  },
+  startLoc: {
+    type: pointSchema,
+    required: true
+  },
+  currentLoc: {
+    type: pointSchema,
+    // required: true
+  },
+  endLoc: {
+    type: pointSchema,
+    // required: true
   },
   status: {
     type: String,
@@ -47,33 +70,11 @@ const orderSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  fromLng: {
-    type: String,
-    require: [true, "please provide start location about the order"],
-  },
-  fromLat: {
-    type: String,
-    require: [true, "please provide start location about the order"],
-  },
-  currentLng: {
-    type: String,
-    require: [true, "please provide current location about the order"],
-  },
-  currentLat: {
-    type: String,
-    require: [true, "please provide current location about the order"],
-  },
-  toLng: {
-    type: String,
-    require: [true, "please provide end location about the order"],
-  },
-  toLat: {
-    type: String,
-    require: [true, "please provide end location about the order"],
-  },
+  
   weight: String,
   quantity: Number,
   description: String,
+  price: Number,
   delivery: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -85,6 +86,9 @@ const orderSchema = new mongoose.Schema({
     ref: "User",
   },
 });
+
+orderSchema.index({ startLoc: '2dsphere' });
+orderSchema.index({ endLoc: '2dsphere' });
 
 const Order = mongoose.model("Order", orderSchema);
 module.exports = Order;

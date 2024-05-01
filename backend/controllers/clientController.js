@@ -1,4 +1,5 @@
 const Order = require("../models/Order");
+const User = require("../models/User")
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const APIFeatures = require("../utils/APIFeatures");
@@ -13,6 +14,33 @@ exports.createOrder = catchAsync(async (req, res,next) => {
     },
   });
 });
+
+exports.nearestDelivery = catchAsync(async (req, res, next) => {
+  const users = await User.find({
+    startLoc: {
+      $near: {
+        $geometry: { type: "Point", coordinates: [31.13498288424883, 33.8003659501793] },
+        $minDistance: 1,
+        $maxDistance: 500
+      }
+    }
+  })
+  
+
+  
+  if(!delivery){
+    return next(new AppError("There is no delivery near to you, We will notify if they there", 400))
+  }
+
+  res.status(200).json({
+    status: "success",
+    results: delivery.length,
+    data: {
+      deliveries: delivery,
+    },
+  });
+  console.log(delivery);
+})
 
 exports.getAllOrders = catchAsync(async (req, res, next) => {
   let query = Order.find({ client: req.user.id });
