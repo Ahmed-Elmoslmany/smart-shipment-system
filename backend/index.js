@@ -25,7 +25,7 @@ app.use(bodyParser.json());
 
 
 app.use("/api/v1/users", userRouter);
-app.use("/api/v1/client/orders", clientRouter);
+app.use("/api/v1/client/order", clientRouter);
 app.use("/api/v1/delivery/order", deliveryRouter);
 
 
