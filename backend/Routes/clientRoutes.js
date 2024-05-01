@@ -8,6 +8,7 @@ router.get("/nearestDelivery", Auth.protect, Auth.restrictTo("client"), clientOr
 router.post("/createOrder", Auth.protect, Auth.restrictTo("client"), clientOrders.createOrder)
 router.get("/getAllOrders", Auth.protect, Auth.restrictTo("client"), clientOrders.getAllOrders);
 
+//some get,update,delete routes !
 router
 .route("/:id")
 .get(Auth.protect, Auth.restrictTo("client"), clientOrders.getOrder)
