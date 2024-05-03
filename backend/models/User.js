@@ -56,11 +56,11 @@ const userSchema = new mongoose.Schema({
   // Fixed Delivery
   startLoc: {
     type: pointSchema,
-    required: true
+
   },
   endLoc: {
     type: pointSchema,
-    required: true
+
   },
   geoStateStart: String,
   geoStateEnd: String,
