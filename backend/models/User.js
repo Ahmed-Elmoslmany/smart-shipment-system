@@ -38,7 +38,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["client", "fixed-delivery", "unorganized-delivery", "admin"],
+    enum: ["client", "fixed-delivery", "unorganized-delivery"],
   },
 
   // Unorganized Delivery
