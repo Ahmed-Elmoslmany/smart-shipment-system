@@ -16,27 +16,32 @@ exports.createOrder = catchAsync(async (req, res,next) => {
 });
 
 exports.nearestDelivery = catchAsync(async (req, res, next) => {
-  const users = await User.find({
+  const [lng, lat] = req.query.startLocation.split(",")
+  const endLocation = req.query.endLocation;
+  console.log(endLocation);
+  const delivery = await User.find({
     startLoc: {
       $near: {
-        $geometry: { type: "Point", coordinates: [31.13498288424883, 33.8003659501793] },
+        $geometry: { type: "Point", coordinates: [lng, lat] },
         $minDistance: 1,
-        $maxDistance: 500
+        $maxDistance: 5000
       }
     }
   })
   
 
+  if(!delivery) return next(new AppError("There is no delivery near to you, We will notify if they there", 400))
   
-  if(!delivery){
-    return next(new AppError("There is no delivery near to you, We will notify if they there", 400))
-  }
+
+  availableDelivery = delivery.filter( delivery => delivery.endState === endLocation)
+
+  if(!availableDelivery) return next(new AppError(`There is no delivery can going to ${endLocation}, We will notify if they there`, 400))
 
   res.status(200).json({
     status: "success",
-    results: delivery.length,
+    results: availableDelivery.length,
     data: {
-      deliveries: delivery,
+      deliveries: availableDelivery,
     },
   });
   console.log(delivery);

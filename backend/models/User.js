@@ -42,11 +42,14 @@ const userSchema = new mongoose.Schema({
   },
 
   // Unorganized Delivery
-  geoState: String,
+  currentState: {
+    type: pointSchema,
+    required: true
+  },
 
   // Common on Unorganized and fixed delivery
   vehicleType: String,
-  vehicleLicense: String,
+  vehicleLicenseImg: String,
   deliveryApprovalImg: String,
   deliveryApproved: {
     type: Boolean,
@@ -62,8 +65,8 @@ const userSchema = new mongoose.Schema({
     type: pointSchema,
 
   },
-  geoStateStart: String,
-  geoStateEnd: String,
+  startState: String,
+  endState: String,
   tripTime: String,
   tripPeriod: Array,
 
