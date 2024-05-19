@@ -7,13 +7,12 @@ const randomstring = require("randomstring");
 const pointSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ['Point'],
+    enum: ["Point"],
   },
   coordinates: {
     type: [Number],
-  }
+  },
 });
-
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -44,7 +43,6 @@ const userSchema = new mongoose.Schema({
   // Unorganized Delivery
   currentState: {
     type: pointSchema,
-    required: true
   },
 
   // Common on Unorganized and fixed delivery
@@ -53,17 +51,15 @@ const userSchema = new mongoose.Schema({
   deliveryApprovalImg: String,
   deliveryApproved: {
     type: Boolean,
-    default: false
+    default: false,
   },
 
   // Fixed Delivery
   startLoc: {
     type: pointSchema,
-
   },
   endLoc: {
     type: pointSchema,
-
   },
   startState: String,
   endState: String,
@@ -100,8 +96,8 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-userSchema.index({ startLoc: '2dsphere' });
-userSchema.index({ endLoc: '2dsphere' });
+userSchema.index({ startLoc: "2dsphere" });
+userSchema.index({ endLoc: "2dsphere" });
 
 userSchema.pre(/^find/, function (next) {
   this.select("-__v");
