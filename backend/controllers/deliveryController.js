@@ -4,7 +4,7 @@ const AppError = require("../utils/appError");
 const APIFeatures = require("../utils/APIFeatures");
 
 const ordersSummary = (orders) => {
-  const processedOrders = orders.map((order) => ({
+  return orders.map((order) => ({
     client: order.client.name,
     type: order.type,
     price: order.price,
@@ -13,11 +13,9 @@ const ordersSummary = (orders) => {
     weight: order.weight,
     quantity: order.quantity,
   }));
-
-  return processedOrders;
 };
 
-exports.getAvaiableOrders = catchAsync(async (req, res, next) => {
+exports.getAvailableOrders = catchAsync(async (req, res, next) => {
   const features = new APIFeatures(
     Order.find({ delivery: { $exists: false } }),
     req.query
@@ -27,78 +25,63 @@ exports.getAvaiableOrders = catchAsync(async (req, res, next) => {
     .paginate();
 
   const orders = await features.query.populate("client");
-  const processedOrders = ordersSummary(orders); // clarify the data
+  const processedOrders = ordersSummary(orders);
 
-  
+  res.status(200).json({
+    status: 'success',
+    results: orders.length,
+    data: { orders: processedOrders },
+  });
 });
 
 exports.updateOrderStatus = catchAsync(async (req, res, next) => {
   const id = req.params.id;
   const status = req.query.status;
 
+  if (!id) {
+    return next(new AppError('Order ID is required', 400, 'id', 'Validation'));
+  }
+  
+  if (!status) {
+    return next(new AppError('Order status is required', 400, 'status', 'Validation'));
+  }
+
   try {
+    let update;
     switch (status) {
       case "pickedup":
-        await Order.findByIdAndUpdate(
-          id,
-          {
-            status: "picked-up",
-            pickedUp: true,
-            unPicked: false,
-          },
-          { new: true, runValidators: true }
-        );
+        update = { status: "picked-up", pickedUp: true, unPicked: false };
         break;
 
       case "coming":
-        await Order.findByIdAndUpdate(
-          id,
-          {
-            status: "coming",
-            coming: true,
-            pickedUp: false,
-          },
-          { new: true, runValidators: true }
-        );
+        update = { status: "coming", coming: true, pickedUp: false };
         break;
 
       case "delivered":
-        await Order.findByIdAndUpdate(
-          id,
-          {
-            status: "delivered",
-            delivered: true,
-            coming: false,
-          },
-          { new: true, runValidators: true }
-        );
+        update = { status: "delivered", delivered: true, coming: false };
         break;
 
       default:
         return next(
-          new AppError(
-            `Please provide valid order status, the ${status} is unvalid`,
-            400
-          )
+          new AppError(`Invalid order status: ${status}`, 400, 'status', 'Validation')
         );
-        break;
     }
+    
+    await Order.findByIdAndUpdate(id, update, { new: true, runValidators: true });
+
   } catch (error) {
     return next(
-      new AppError(
-        `Oops can't update order status at this moment, please try again later`,
-        400
-      )
+      new AppError('Unable to update order status, please try again later', 500, 'database', 'Database')
     );
   }
 
   res.status(200).json({
     status: "success",
-    message: "order status updated succussfully",
+    message: "Order status updated successfully",
   });
 });
 
-exports.assignOrderToMe = catchAsync(async (req, res) => {
+exports.assignOrderToMe = catchAsync(async (req, res, next) => {
   await Order.findByIdAndUpdate(
     req.params.id,
     { delivery: req.user.id },
@@ -107,11 +90,11 @@ exports.assignOrderToMe = catchAsync(async (req, res) => {
 
   res.status(200).json({
     status: "success",
-    message: `order assigned you ${req.user.name} succussfully, Delivered it as fast as possible!`,
+    message: `Order assigned to you (${req.user.name}) successfully, please deliver it as soon as possible!`,
   });
 });
 
-exports.summary = catchAsync(async (req, res, nest) => {
+exports.summary = catchAsync(async (req, res, next) => {
   const features = new APIFeatures(
     Order.find({ delivery: req.user.id }),
     req.query
@@ -121,10 +104,8 @@ exports.summary = catchAsync(async (req, res, nest) => {
     .paginate();
 
   const orders = await features.query.populate("client");
+  const processedOrders = ordersSummary(orders);
 
-  // const orders = await Order.find({delivery: req.user.id})
-
-  const processedOrders = ordersSummary(orders); // clarify the data
   if (processedOrders.length > 0) {
     res.status(200).json({
       status: "success",
@@ -133,14 +114,10 @@ exports.summary = catchAsync(async (req, res, nest) => {
         orders: processedOrders,
       },
     });
-  }
-  {
+  } else {
     res.status(200).json({
       status: "success",
-      message: "There is no orders found",
+      message: "There are no orders found",
     });
   }
 });
-
-
-
