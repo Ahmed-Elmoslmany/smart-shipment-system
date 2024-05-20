@@ -22,7 +22,7 @@ const handleDuplicateFieldsDB = err => {
 
   const ErrorObj = Object.keys(err.keyPattern)
 
-  const message = `Duplicateي field ${ErrorObj[0]} with value is: ${value}. Please use another value!`;
+  const message = `Duplicated field ${ErrorObj[0]} with value is: ${value}. Please use another value!`;
   return new AppError(message, 400);
 };
 

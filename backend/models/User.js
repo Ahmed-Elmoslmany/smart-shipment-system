@@ -43,6 +43,7 @@ const userSchema = new mongoose.Schema({
   // Unorganized Delivery
   currentState: {
     type: pointSchema,
+    required: true
   },
 
   // Common on Unorganized and fixed delivery
@@ -83,8 +84,9 @@ const userSchema = new mongoose.Schema({
     },
   },
   passwordChangedAt: Date,
-  OTP: String,
   passwordResetExpires: Date,
+  OTP: String,
+  otpResetExpires: Date,
   confirmedEmail: {
     type: Boolean,
     default: false,
@@ -165,7 +167,7 @@ userSchema.methods.createUserOTP = function () {
   });
 
   this.OTP = otp;
-  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+  this.otpResetExpires = Date.now() + 10 * 60 * 1000;
 
   return otp;
 };

@@ -71,7 +71,7 @@ exports.signup = catchAsync(async (req, res, next) => {
   } catch (error) {
     // Set OTP and expire data to "undifined" if error occur
     newUser.OTP = undefined;
-    newUser.passwordResetExpires = undefined;
+    newUser.otpResetExpires = undefined;
     await newUser.save({ validateBeforeSave: false });
 
     return next(
