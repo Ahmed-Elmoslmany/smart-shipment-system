@@ -19,7 +19,7 @@ const handleDuplicateFieldsDB = err => {
   const value = Object.values(err.keyValue)[0]
   console.log(value);
 
-  const message = `Duplicate field value: ${value}. Please use another value!`;
+  const message = `Duplicate field ${err.keyPattern} value: ${value}. Please use another value!`;
   return new AppError(message, 400);
 };
 
@@ -74,7 +74,7 @@ exports.globalErrorController = (err, req, res, next) => {
     if (error.name === 'CastError') error = handleCastErrorDB(error);
     if(error.code === 11000) error = handleDuplicateFieldsDB(error);
     if (error.name === 'ValidationError') error = handleValidationErrorDB(error);
-    if (error._message === 'Tour validation failed') error = handleValidationErrorDB(error);
+    if (error._message === 'User validation failed') error = handleValidationErrorDB(error);
     if(error.name === 'JsonWebTokenError') error = JWTInvalidError()
     if(error.name === 'TokenExpiredError') error = JWTExpireError()
 
