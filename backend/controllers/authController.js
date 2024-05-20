@@ -7,7 +7,6 @@ const catchAsync = require("./../utils/catchAsync");
 const sendEmail = require("./../utils/email");
 const cloudinary = require("../utils/cloud");
 
-
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.SECRET_JWT, {
     expiresIn: process.env.TOKEN_EXPIRES_IN,
@@ -43,11 +42,7 @@ const createSendToken = (user, statusCode, res) => {
 };
 
 exports.signup = catchAsync(async (req, res, next) => {
-  
- 
   const newUser = await User.create(req.body);
-  
-
 
   const signUpOTP = newUser.createUserOTP();
 
@@ -59,14 +54,14 @@ exports.signup = catchAsync(async (req, res, next) => {
   try {
     await sendEmail({
       email: newUser.email,
-      subject: "Your OPT for the registration (valid for 10 mins!)",
+      subject: "Your OTP for the registration (valid for 10 mins!)",
       message,
     });
 
     res.status(201).json({
       status: "success",
       message:
-        "Registration OTP send to your email, Please confirm youe account",
+        "Registration OTP send to your email, Please confirm your account",
     });
   } catch (error) {
     // Set OTP and expire data to "undifined" if error occur
@@ -86,30 +81,72 @@ exports.signup = catchAsync(async (req, res, next) => {
 exports.confirmAccount = catchAsync(async (req, res, next) => {
   const { email, otp } = req.body;
 
-  if (!email || !otp) return next(new AppError("Please provide email and OTP", 400));
-  
-  const user = await User.findOne({email});
+  if (!email || !otp)
+    return next(new AppError("Please provide email and OTP", 400));
+
+  const user = await User.findOne({ email });
   console.log(user);
-  if (!user) return next(new AppError("There is not user with this email!", 400));
+  if (!user)
+    return next(new AppError("There is not user with this email!", 400));
 
-  if(user.confirmedEmail) return next(new AppError("Email is already confirmed, Enjoy!", 400));
+  if (user.confirmedEmail)
+    return next(new AppError("Email is already confirmed, Enjoy!", 400));
 
-  
-
-  if(otp === user.OTP) {
-    user.confirmedEmail = true
-    user.active = true
+  if (otp === user.OTP) {
+    user.confirmedEmail = true;
+    user.active = true;
     user.OTP = undefined;
     user.passwordResetExpires = undefined;
 
     await user.save({ validateBeforeSave: false });
-  }else{
+  } else {
     return next(new AppError("Please provide a valid OTP!", 400));
   }
 
-
-
   createSendToken(user, 201, res);
+});
+
+exports.resendOTP = catchAsync(async (req, res, next) => {
+  const { email } = req.body;
+
+  if (!email) return next(new AppError("Please provide an email", 400));
+
+  const user = await User.findOne({ email });
+  if (!user)
+    return next(new AppError("There is no user with this email!", 400));
+
+  if (user.confirmedEmail)
+    return next(new AppError("Email is already confirmed, enjoy!", 400));
+
+  const newOTP = user.createUserOTP();
+
+  await user.save({ validateBeforeSave: false });
+
+  const message = `Here is your OTP: ${newOTP}\nPlease confirm your account within 10 minutes.`;
+
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: "Your OTP for the registration (valid for 10 mins!)",
+      message,
+    });
+
+    res.status(200).json({
+      status: "success",
+      message: "OTP sent to your email. Please confirm your account.",
+    });
+  } catch (error) {
+    user.OTP = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    return next(
+      new AppError(
+        "Oops, it seems there was an error on our server. Please try again later.",
+        500
+      )
+    );
+  }
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -122,8 +159,17 @@ exports.login = catchAsync(async (req, res, next) => {
   const user = await User.findOne({ email }).select("+password");
 
   console.log(user);
-  if (!user || !(await user.correctPassword(password, user.password)) || !user.confirmedEmail) {
-    return next(new AppError("Please provide correct email and password, or confirm your email before login", 401));
+  if (
+    !user ||
+    !(await user.correctPassword(password, user.password)) ||
+    !user.confirmedEmail
+  ) {
+    return next(
+      new AppError(
+        "Please provide correct email and password, or confirm your email before login",
+        401
+      )
+    );
   }
 
   createSendToken(user, 200, res);
