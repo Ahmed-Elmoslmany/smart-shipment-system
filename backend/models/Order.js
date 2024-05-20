@@ -39,7 +39,7 @@ const orderSchema = new mongoose.Schema({
   },
   startLoc: {
     type: pointSchema,
-    required: true
+    // required: true
   },
   currentLoc: {
     type: pointSchema,

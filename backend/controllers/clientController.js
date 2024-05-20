@@ -17,14 +17,15 @@ exports.createOrder = catchAsync(async (req, res,next) => {
 
 exports.nearestDelivery = catchAsync(async (req, res, next) => {
   const [lng, lat] = req.query.startLocation.split(",")
-  const endLocation = req.query.endLocation;
-  console.log(endLocation);
+  const endLocation = req.query.endLocation
+  const maxDis = req.query.maxDis
+  // console.log(endLocation);
   const delivery = await User.find({
     startLoc: {
       $near: {
         $geometry: { type: "Point", coordinates: [lng, lat] },
         $minDistance: 1,
-        $maxDistance: 5000
+        $maxDistance: maxDis * 1
       }
     }
   })
@@ -44,7 +45,7 @@ exports.nearestDelivery = catchAsync(async (req, res, next) => {
       deliveries: availableDelivery,
     },
   });
-  console.log(delivery);
+  // console.log(delivery);
 })
 
 exports.getAllOrders = catchAsync(async (req, res, next) => {
