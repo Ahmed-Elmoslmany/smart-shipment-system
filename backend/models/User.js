@@ -43,7 +43,6 @@ const userSchema = new mongoose.Schema({
   // Unorganized Delivery
   currentState: {
     type: pointSchema,
-    required: true
   },
 
   // Common on Unorganized and fixed delivery

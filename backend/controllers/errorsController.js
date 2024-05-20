@@ -23,7 +23,7 @@ const handleDuplicateFieldsDB = err => {
   const ErrorObj = Object.keys(err.keyPattern)
 
   const message = `Duplicated field ${ErrorObj[0]} with value is: ${value}. Please use another value!`;
-  return new AppError(message, 400);
+  return new AppError(message, 400, ErrorObj[0], "Duplicated");
 };
 
 const handleValidationErrorDB = err => {
