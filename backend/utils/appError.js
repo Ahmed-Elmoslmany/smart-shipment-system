@@ -1,5 +1,5 @@
 class AppError extends Error{
-    constructor(message, statusCode, field = "", type = ""){
+    constructor(message, statusCode, field = "Can't detected", type = "Operational"){
         super(message) // This line because default Error class receive string as argument is equal {this.message = message}
 
         this.statusCode = statusCode

@@ -30,7 +30,7 @@ const handleValidationErrorDB = err => {
   const errors = Object.values(err.errors).map(el => el.message);
 
   const message = `Invalid input data. ${errors.join('. ')}`;
-  return new AppError(message, 400);
+  return new AppError(message, 400, errors.join('. '), "Required" );
 };
 
 const sendErrorDev = (err, res) => {
@@ -47,7 +47,9 @@ const sendErrorProd = (err, res) => {
   if (err.isOperational) {
     res.status(err.statusCode).json({
       status: err.status,
-      message: err.message
+      message: err.message,
+      errorType: err.type,
+      field: err.field,
     });
 
     // Programming or other unknown error: don't leak error details
