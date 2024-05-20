@@ -31,12 +31,12 @@ exports.nearestDelivery = catchAsync(async (req, res, next) => {
   })
   
 
-  if(!delivery) return next(new AppError("There is no delivery near to you, We will notify if they there", 400))
+  if(!delivery) return next(new AppError("There is no delivery near to you, We will notify if they there", 400, "Delivery", "Can't found"))
   
 
   availableDelivery = delivery.filter( delivery => delivery.endState === endLocation)
 
-  if(!availableDelivery) return next(new AppError(`There is no delivery can going to ${endLocation}, We will notify if they there`, 400))
+  if(!availableDelivery) return next(new AppError(`There is no delivery can going to ${endLocation}, We will notify if they there`, 400, "Delivery", "Can't found"))
 
   res.status(200).json({
     status: "success",
@@ -70,7 +70,7 @@ exports.getOrder = catchAsync(async (req, res, next) => {
   const order = await Order.findOne({ _id: req.params.id, client: req.user.id });
 
   if (!order) {
-    return next(new AppError("Order not found with this ID", 404));
+    return next(new AppError("Order not found with this ID", 404, "ID", "Can't found"));
   }
 
   res.status(200).json({
@@ -92,7 +92,7 @@ exports.updateOrder = catchAsync(async (req, res, next) => {
   );
 
   if (!order) {
-    return next(new AppError("Order not found with this ID", 404));
+    return next(new AppError("Order not found with this ID", 404, "ID", "Can't found"));
   }
 
   res.status(200).json({
@@ -107,7 +107,7 @@ exports.deleteOrder = catchAsync(async (req, res, next) => {
   const order = await Order.findOneAndDelete({ _id: req.params.id, client: req.user.id });
 
   if (!order) {
-    return next(new AppError("Order not found with this ID", 404));
+    return next(new AppError("Order not found with this ID", 404, "ID", "Can't found"));
   }
 
   res.status(204).json({

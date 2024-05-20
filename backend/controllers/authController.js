@@ -87,7 +87,7 @@ exports.confirmAccount = catchAsync(async (req, res, next) => {
   const user = await User.findOne({ email });
   console.log(user);
   if (!user)
-    return next(new AppError("There is not user with this email!", 400));
+    return next(new AppError("There is not user with this email!", 400, "Email", "Invalid"));
 
   if (user.confirmedEmail)
     return next(new AppError("Email is already confirmed, Enjoy!", 400));
@@ -100,7 +100,7 @@ exports.confirmAccount = catchAsync(async (req, res, next) => {
 
     await user.save({ validateBeforeSave: false });
   } else {
-    return next(new AppError("Please provide a valid OTP!", 400));
+    return next(new AppError("Please provide a valid OTP!", 400, "OTP", "Invalid"));
   }
 
   createSendToken(user, 201, res);
@@ -109,14 +109,14 @@ exports.confirmAccount = catchAsync(async (req, res, next) => {
 exports.resendOTP = catchAsync(async (req, res, next) => {
   const { email } = req.body;
 
-  if (!email) return next(new AppError("Please provide an email", 400));
+  if (!email) return next(new AppError("Please provide an email", 400, "Email" ,"Email missed"));
 
   const user = await User.findOne({ email });
   if (!user)
-    return next(new AppError("There is no user with this email!", 400));
+    return next(new AppError("There is no user with this email!", 400, "Email", "Invalid"));
 
   if (user.confirmedEmail)
-    return next(new AppError("Email is already confirmed, enjoy!", 400));
+    return next(new AppError("Email is already confirmed, enjoy!", 400, "Email", "Already done"));
 
   const newOTP = user.createUserOTP();
 
@@ -143,7 +143,9 @@ exports.resendOTP = catchAsync(async (req, res, next) => {
     return next(
       new AppError(
         "Oops, it seems there was an error on our server. Please try again later.",
-        500
+        500,
+        "Server",
+        "Server Down"
       )
     );
   }
@@ -153,7 +155,7 @@ exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email && !password) {
-    return next(new AppError("Please provide a email and password", 400));
+    return next(new AppError("Please provide a email and password", 400, "Email or Password", "Missed"));
   }
 
   const user = await User.findOne({ email }).select("+password");
@@ -167,7 +169,9 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(
       new AppError(
         "Please provide correct email and password, or confirm your email before login",
-        401
+        401,
+        "Email or Password",
+        "Incorrect"
       )
     );
   }
@@ -186,7 +190,7 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   if (!token) {
     return next(
-      new AppError("you aren't logged, please login in to get access", 401)
+      new AppError("you aren't logged, please login in to get access", 401,"Token", "Invalid")
     );
   }
 
@@ -200,14 +204,14 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   if (!currentUser) {
     return next(
-      new AppError("the user belonging to the token does no longer exist", 401)
+      new AppError("the user belonging to the token does no longer exist", 401, "Token", "Expired")
     );
   }
 
   // Check if user change password after the token was created
   if (currentUser.passwordChangedAfterCreatedToken(decodedToekn.iat)) {
     return next(
-      new AppError("User recently changed password, Please login again", 401)
+      new AppError("User recently changed password, Please login again", 401, "Token", "Changed")
     );
   }
 
@@ -220,7 +224,7 @@ exports.restrictTo = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
       return next(
-        new AppError("You are not have permission to perform this action", 403)
+        new AppError("You are not have permission to perform this action", 403, "Permission", "Authorization")
       );
     }
     next();
@@ -231,7 +235,7 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
   // Get user based on email
   const user = await User.findOne({ email: req.body.email });
   if (!user) {
-    return next(new AppError("there are no user with this email", 404));
+    return next(new AppError("there are no user with this email", 404, "Email", "Incorrect"));
   }
 
   // generate password reset OTP
@@ -263,7 +267,9 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
     return next(
       new AppError(
         "Oops it seems an error on our server, Please try again later",
-        500
+        500,
+        "Server",
+        "Server Down"
       )
     );
   }
@@ -277,7 +283,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   console.log(user);
   // check token expire and user exist and set new password
   if (!user) {
-    return next(new AppError("Invalid token or expired", 400));
+    return next(new AppError("Invalid token or expired", 400, "Token", "Expired"));
   }
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
@@ -296,7 +302,7 @@ exports.updateMyPassword = async (req, res, next) => {
 
   // check if current password is same as the password in database
   if (!(await user.correctPassword(req.body.currentPassword, user.password))) {
-    return next(new AppError("Your current password is wrong", 401));
+    return next(new AppError("Your current password is wrong", 401, "Password", "Incorrect"));
   }
 
   // check if current password is equal the new password
@@ -304,7 +310,9 @@ exports.updateMyPassword = async (req, res, next) => {
     return next(
       new AppError(
         "Your new password should be different from the current password",
-        400
+        400,
+        "Password",
+        "Not the same"
       )
     );
   }
@@ -314,7 +322,9 @@ exports.updateMyPassword = async (req, res, next) => {
     return next(
       new AppError(
         "Your new password and confirm password should be the same",
-        400
+        400,
+        "Password",
+        "Must be the same"
       )
     );
   }
