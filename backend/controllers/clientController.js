@@ -12,7 +12,7 @@ exports.createOrder = catchAsync(async (req, res, next) => {
   try {
     endCoordinates = await geocodeAddress(req.body.endLocation);
   } catch (error) {
-    return next(new AppError("Invalid end location address", 400));
+    return next(new AppError("Invalid end location address", 400, "endLocation", "Invalid"));
   }
 
   // Create the order with geocoded endLoc
