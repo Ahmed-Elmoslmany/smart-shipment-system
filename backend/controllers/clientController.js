@@ -3,9 +3,37 @@ const User = require("../models/User")
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const APIFeatures = require("../utils/APIFeatures");
+const geocodeAddress = require("../utils/geocodeAddress");
+const calculateDistance = require("../utils/distanceUtils");
 
-exports.createOrder = catchAsync(async (req, res,next) => {
-  const order = await Order.create({...req.body, client: req.user.id});
+exports.createOrder = catchAsync(async (req, res, next) => {
+  // Geocode the end location address
+  let endCoordinates;
+  try {
+    endCoordinates = await geocodeAddress(req.body.endLocation);
+  } catch (error) {
+    return next(new AppError("Invalid end location address", 400));
+  }
+
+  // Create the order with geocoded endLoc
+  const orderData = {
+    ...req.body,
+    client: req.user.id,
+    endLoc: {
+      type: "Point",
+      coordinates: endCoordinates
+    },
+    startLoc: {
+      type: "Point",
+      coordinates: req.body.startLoc.coordinates
+    },
+    currentLoc: {
+      type: "Point",
+      coordinates: req.body.currentLoc.coordinates
+    }
+  };
+
+  const order = await Order.create(orderData);
 
   res.status(201).json({
     status: "success",
@@ -15,28 +43,48 @@ exports.createOrder = catchAsync(async (req, res,next) => {
   });
 });
 
+
 exports.nearestDelivery = catchAsync(async (req, res, next) => {
-  const [lng, lat] = req.query.startLocation.split(",")
-  const endLocation = req.query.endLocation
-  const maxDis = req.query.maxDis
-  // console.log(endLocation);
+  const [lng, lat] = req.query.startLocation.split(",");
+  const endLocation = req.query.endLocation;
+  const maxDis = req.query.maxDis;
+
+  // Convert endLocation text address to coordinates
+  let endCoordinates;
+  try {
+    endCoordinates = await geocodeAddress(endLocation);
+  } catch (error) {
+    return next(new AppError("Invalid end location address", 400));
+  }
+
   const delivery = await User.find({
     startLoc: {
       $near: {
-        $geometry: { type: "Point", coordinates: [lng, lat] },
+        $geometry: { type: "Point", coordinates: [parseFloat(lng), parseFloat(lat)] },
         $minDistance: 1,
-        $maxDistance: maxDis * 1
-      }
+        $maxDistance: maxDis * 1,
+      },
+    },
+  });
+
+  if (!delivery.length) {
+    return next(new AppError("There is no delivery near to you, We will notify if they are there", 400));
+  }
+
+  // Filter deliveries based on endState matching the endLocation text
+  const availableDelivery = delivery.filter(delivery => {
+    if (!delivery.endLoc || !delivery.endLoc.coordinates) {
+      return false; // Skip deliveries without valid endLoc coordinates
     }
-  })
-  
+    
+    const [deliveryLng, deliveryLat] = delivery.endLoc.coordinates;
+    const distance = calculateDistance(endCoordinates[1], endCoordinates[0], deliveryLat, deliveryLng);
+    return distance <= maxDis;
+  });
 
-  if(!delivery) return next(new AppError("There is no delivery near to you, We will notify if they there", 400, "Delivery", "Can't found"))
-  
-
-  availableDelivery = delivery.filter( delivery => delivery.endState === endLocation)
-
-  if(!availableDelivery) return next(new AppError(`There is no delivery can going to ${endLocation}, We will notify if they there`, 400, "Delivery", "Can't found"))
+  if (!availableDelivery.length) {
+    return next(new AppError(`There is no delivery going to ${endLocation}, We will notify if they are there`, 400));
+  }
 
   res.status(200).json({
     status: "success",
@@ -45,8 +93,8 @@ exports.nearestDelivery = catchAsync(async (req, res, next) => {
       deliveries: availableDelivery,
     },
   });
-  // console.log(delivery);
-})
+});
+
 
 exports.getAllOrders = catchAsync(async (req, res, next) => {
   let query = Order.find({ client: req.user.id });

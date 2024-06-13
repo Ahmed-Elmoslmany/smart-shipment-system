@@ -15,21 +15,21 @@ const pointSchema = new mongoose.Schema({
 const orderSchema = new mongoose.Schema({
   type: {
     type: String,
-    require: [true, "please provide order type"],
+    required: [true, "please provide order type"],
   },
   recipentName: {
     type: String,
-    require: [true, "please provide reciepent name"],
+    required: [true, "please provide recipient name"],
   },
   reciepentPhone: {
     type: String,
-    required: [true, "please provide reciepent phone number"],
+    required: [true, "please provide recipient phone number"],
     max: 12,
     min: 10,
   },
   senderName: {
     type: String,
-    require: [true, "please provide sender name"],
+    required: [true, "please provide sender name"],
   },
   senderPhone: {
     type: String,
@@ -39,15 +39,19 @@ const orderSchema = new mongoose.Schema({
   },
   startLoc: {
     type: pointSchema,
-    // required: true
+    required: true
   },
   currentLoc: {
     type: pointSchema,
-    // required: true
+    required: true
   },
   endLoc: {
     type: pointSchema,
-    // required: true
+    required: true
+  },
+  endLocation: {
+    type: String,
+    required: [true, "please provide end location"]
   },
   status: {
     type: String,
@@ -70,7 +74,6 @@ const orderSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  
   weight: String,
   quantity: Number,
   description: String,
