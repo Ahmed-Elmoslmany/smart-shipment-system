@@ -20,46 +20,27 @@ exports.createOrder = catchAsync(async (req, res, next) => {
 
 
 exports.nearestDelivery = catchAsync(async (req, res, next) => {
-  const [lng, lat] = req.query.startLocation.split(",");
-  const endLocation = req.query.endLocation;
-  const maxDis = req.query.maxDis;
-
-  // Convert endLocation text address to coordinates
-  let endCoordinates;
-  try {
-    endCoordinates = await geocodeAddress(endLocation);
-  } catch (error) {
-    return next(new AppError("Invalid end location address", 400));
-  }
+  const [lng, lat] = req.query.startLocation.split(",")
+  const endLocation = req.query.endLocation
+  const maxDis = req.query.maxDis
 
   const delivery = await User.find({
     startLoc: {
       $near: {
-        $geometry: { type: "Point", coordinates: [parseFloat(lng), parseFloat(lat)] },
-        $minDistance: 1,
-        $maxDistance: maxDis * 1,
-      },
-    },
-  });
-
-  if (!delivery.length) {
-    return next(new AppError("There is no delivery near to you, We will notify if they are there", 400));
-  }
-
-  // Filter deliveries based on endState matching the endLocation text
-  const availableDelivery = delivery.filter(delivery => {
-    if (!delivery.endLoc || !delivery.endLoc.coordinates) {
-      return false; // Skip deliveries without valid endLoc coordinates
+        $geometry: { type: "Point", coordinates: [lng, lat] },
+        $maxDistance: maxDis * 1
+      }
     }
-    
-    const [deliveryLng, deliveryLat] = delivery.endLoc.coordinates;
-    const distance = calculateDistance(endCoordinates[1], endCoordinates[0], deliveryLat, deliveryLng);
-    return distance <= maxDis;
-  });
+  })
 
-  if (!availableDelivery.length) {
-    return next(new AppError(`There is no delivery going to ${endLocation}, We will notify if they are there`, 400));
-  }
+  if(!delivery) return next(new AppError("There is no delivery near to you, We will notify if they there", 400, "Delivery", "Can't found"))
+
+
+    availableDelivery = delivery.filter( delivery => delivery.endState === endLocation)
+    if(!availableDelivery) return next(new AppError(`There is no delivery can going to ${endLocation}, We will notify if they there`, 400, "Delivery", "Can't found"))
+      // console.log(delivery);
+
+ 
 
   res.status(200).json({
     status: "success",
