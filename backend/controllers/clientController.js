@@ -7,32 +7,8 @@ const geocodeAddress = require("../utils/geocodeAddress");
 const calculateDistance = require("../utils/distanceUtils");
 
 exports.createOrder = catchAsync(async (req, res, next) => {
-  // Geocode the end location address
-  let endCoordinates;
-  try {
-    endCoordinates = await geocodeAddress(req.body.endLocation);
-  } catch (error) {
-    return next(new AppError("Invalid end location address", 400, "endLocation", "Invalid"));
-  }
+  const order = await Order.create({...req.body, client: req.user.id});
 
-  // Create the order with geocoded endLoc
-  const orderData = {
-    ...req.body,
-    client: req.user.id,
-    endLocation: "cairo",
-    endLoc: {
-      type: "Point",
-      coordinates: endCoordinates
-    },
-    startLoc: {
-      type: "Point",
-      coordinates: req.body.startLoc.coordinates
-    },
-    currentLoc: {
-      type: "Point",
-      coordinates: req.body.currentLoc.coordinates
-    }
-  };
 
   const order = await Order.create(orderData);
 
