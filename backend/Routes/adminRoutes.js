@@ -4,7 +4,7 @@ const Auth = require("../controllers/authController")
 
 const router = express.Router();
 
-router.patch("/", Auth.protect, Auth.restrictTo("admin"), adminController.approveDelivery)
+router.patch("/approveDelivery", Auth.protect, Auth.restrictTo("admin"), adminController.approveDelivery)
 
 
 module.exports = router;
