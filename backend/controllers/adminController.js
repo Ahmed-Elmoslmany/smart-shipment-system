@@ -11,7 +11,7 @@ exports.approveDelivery = catchAsync(async (req, res, next) => {
     if (!delivery) {
         return next(new AppError("Delivery not found", 404, "delivery", "Not found"));
     }
-    delivery.approved = true;
+    delivery.deliveryApproved = true;
     await delivery.save();
     res.status(200).json({
         status: "success",
