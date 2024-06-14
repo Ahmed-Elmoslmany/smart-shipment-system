@@ -19,6 +19,7 @@ exports.createOrder = catchAsync(async (req, res, next) => {
   const orderData = {
     ...req.body,
     client: req.user.id,
+    endLocation: "cairo",
     endLoc: {
       type: "Point",
       coordinates: endCoordinates
