@@ -8,6 +8,7 @@ const bodyParser = require("body-parser");
 const {globalErrorController} = require('./controllers/errorsController')
 
 const userRouter = require("./Routes/userRoutes");
+const adminRouter = require("./Routes/adminRoutes");
 const clientRouter = require("./Routes/clientRoutes");
 const deliveryRouter = require("./Routes/deliveryRoutes");
 
@@ -25,6 +26,7 @@ app.use(bodyParser.json());
 
 
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/client/order", clientRouter);
 app.use("/api/v1/delivery/order", deliveryRouter);
 
