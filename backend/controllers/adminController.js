@@ -59,3 +59,21 @@ exports.updateUserInfo = catchAsync(async (req, res, next) => {
         },
     });
 });
+
+exports.banUser = catchAsync(async (req, res, next) => {
+    const user = await User.findOneAndUpdate
+    ({ _id
+    : req.body.userId }, { active: false }, {
+        new: true,
+        runValidators: true,
+    });
+    if (!user) {
+        return next(new AppError("User not found", 404, "user", "Not found"));
+    }
+    res.status(200).json({
+        status: "success",
+        data: {
+            user,
+        },
+    });
+});
