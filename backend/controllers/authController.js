@@ -278,9 +278,11 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
 exports.resetPassword = catchAsync(async (req, res, next) => {
   const user = await User.findOne({
     OTP: req.body.otp,
-    passwordResetExpires: { $gt: Date.now() },
-  });
-  console.log(user);
+    otpResetExpires: { $gt: Date.now() },
+    
+    });
+  // console.log(Date.now());
+  // console.log(user);
   // check token expire and user exist and set new password
   if (!user) {
     return next(new AppError("Invalid token or expired", 400, "Token", "Expired"));
@@ -288,7 +290,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
   user.OTP = undefined;
-  user.passwordResetExpires = undefined;
+  user.otpResetExpires = undefined;
   await user.save();
 
   // update changePasswordAt for current user
