@@ -10,8 +10,6 @@ exports.createOrder = catchAsync(async (req, res, next) => {
   const order = await Order.create({...req.body, client: req.user.id});
 
 
-  const order = await Order.create(orderData);
-
   res.status(201).json({
     status: "success",
     data: {
