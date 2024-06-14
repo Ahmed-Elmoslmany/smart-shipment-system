@@ -4,8 +4,9 @@ const Auth = require("../controllers/authController")
 
 const router = express.Router();
 
+router.get("/getAllUsers", Auth.protect, Auth.restrictTo("admin"), adminController.getUsers)
 router.patch("/approveDelivery", Auth.protect, Auth.restrictTo("admin"), adminController.approveDelivery)
 router.patch("/updateInfo", Auth.protect, Auth.restrictTo("admin"), adminController.updateUserInfo);
-router.get("/getDeliveries", Auth.protect, Auth.restrictTo("admin"), adminController.getDeliveries);
+router.get("/getapprovedDeliveries", Auth.protect, Auth.restrictTo("admin"), adminController.getDeliveries);
 
 module.exports = router;
