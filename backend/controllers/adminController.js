@@ -20,3 +20,14 @@ exports.approveDelivery = catchAsync(async (req, res, next) => {
         },
     });
 });
+
+exports.getDeliveries = catchAsync(async (req, res, next) => {
+    const deliveries = await User.find({ deliveryApproved: true });
+    res.status(200).json({
+        status: "success",
+        results: deliveries.length,
+        data: {
+            deliveries,
+        },
+    });
+});
