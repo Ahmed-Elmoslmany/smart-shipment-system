@@ -25,8 +25,8 @@ const userSchema = new mongoose.Schema({
     unique: true,
     validate: {
       validator: validator.isEmail,
-      message: 'Please use a valid email address.'
-    }
+      message: "Please use a valid email address.",
+    },
   },
   phone: {
     type: String,
@@ -59,16 +59,21 @@ const userSchema = new mongoose.Schema({
   },
 
   // Fixed Delivery
-  startLoc: {
-    type: pointSchema,
-  },
-  endLoc: {
-    type: pointSchema,
-  },
-  startState: String,
-  endState: String,
-  tripTime: String,
-  tripPeriod: Array,
+  trip: [
+    {
+      startLoc: {
+        type: pointSchema,
+      },
+      endLoc: {
+        type: pointSchema,
+      },
+      startState: String,
+      endState: String,
+      time: String,
+      duration: String,
+      day: String,
+    },
+  ],
 
   password: {
     type: String,

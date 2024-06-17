@@ -1,4 +1,5 @@
 const Order = require("../models/Order");
+const User = require("../models/User");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const APIFeatures = require("../utils/APIFeatures");
@@ -120,4 +121,66 @@ exports.summary = catchAsync(async (req, res, next) => {
       message: "There are no orders found",
     });
   }
+});
+
+exports.addDeliveryTrip = catchAsync(async (req, res, next) => {
+  const id = req.user.id;
+  
+  const user = await User.findById(id);
+
+  if (!user) {
+    return next(new AppError('User not found', 404, 'id', 'Validation'));
+  }
+
+  user.trip = [...user.trip, ...req.body.trip];
+
+  await user.save();
+  
+  res.status(200).json({
+    status: "success",
+    message: "Trip added successfully",
+  });
+});
+
+exports.deleteDeliveryTrip = catchAsync(async (req, res, next) => {
+  const id = req.user.id;
+  const indexToDelete = req.params.index;
+  
+  const user = await User.findById(id);
+
+  if (!user) {
+    return next(new AppError('User not found', 404, 'id', 'Validation'));
+  }
+
+  if (indexToDelete > -1 && indexToDelete < user.trip.length) {
+    user.trip.splice(indexToDelete, 1);
+  }
+  await user.save();
+
+  res.status(200).json({
+    status: "success",
+    message: "Trip deleted successfully",
+  });
+});
+
+exports.changeDeliveryTrip = catchAsync(async (req, res, next) => {
+  const id = req.user.id;
+  const indexToChange = req.params.index;
+  
+  const user = await User.findById(id);
+
+  if (!user) {
+    return next(new AppError('User not found', 404, 'id', 'Validation'));
+  };
+
+  if (indexToChange > -1 && indexToChange < user.trip.length) {
+    user.trip[indexToChange] = { ...user.trip[indexToChange], ...req.body};
+  };
+
+  await user.save();
+
+  res.status(200).json({
+    status: "success",
+    message: "Trip changed successfully",
+  });
 });
