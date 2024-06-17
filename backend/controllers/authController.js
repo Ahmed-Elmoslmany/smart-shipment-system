@@ -42,6 +42,11 @@ const createSendToken = (user, statusCode, res) => {
 };
 
 exports.signup = catchAsync(async (req, res, next) => {
+
+  if (req.body.email) {
+    req.body.email = req.body.email.toLowerCase();
+  }
+  
   const newUser = await User.create(req.body);
 
   const signUpOTP = newUser.createUserOTP();
