@@ -46,8 +46,7 @@ const orderSchema = new mongoose.Schema({
     required: true
   },
   endLoc: {
-    type: pointSchema,
-    required: true
+    type: pointSchema
   },
   endLocation: {
     type: String,
