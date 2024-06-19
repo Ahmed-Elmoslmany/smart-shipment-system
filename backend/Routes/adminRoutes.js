@@ -8,7 +8,7 @@ router.get("/getAllUsers", Auth.protect, Auth.restrictTo("admin"), adminControll
 router.patch("/approveDelivery", Auth.protect, Auth.restrictTo("admin"), adminController.approveDelivery)
 router.patch("/updateInfo", Auth.protect, Auth.restrictTo("admin"), adminController.updateUserInfo);
 router.patch("/banUser", Auth.protect, Auth.restrictTo("admin"), adminController.banUser);
-router.get("/getALLDeliveries", Auth.protect, Auth.restrictTo("admin"), adminController.getDeliveries);
+router.get("/getAllDeliveries", Auth.protect, Auth.restrictTo("admin"), adminController.getDeliveries);
 
 
 module.exports = router;
