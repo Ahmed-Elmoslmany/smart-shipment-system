@@ -3,8 +3,7 @@ const User = require("../models/User")
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const APIFeatures = require("../utils/APIFeatures");
-const geocodeAddress = require("../utils/geocodeAddress");
-const calculateDistance = require("../utils/distanceUtils");
+const filterObj = require('../utils/filterObj');
 
 exports.createOrder = catchAsync(async (req, res, next) => {
   const order = await Order.create({...req.body, client: req.user.id});
@@ -86,9 +85,11 @@ exports.getOrder = catchAsync(async (req, res, next) => {
 });
 
 exports.updateOrder = catchAsync(async (req, res, next) => {
+  const filteredBody = filterObj(req.body, 'type', 'description');
+
   const order = await Order.findOneAndUpdate(
     { _id: req.params.id, client: req.user.id },
-    req.body,
+    filteredBody,
     {
       new: true,
       runValidators: true,
@@ -96,11 +97,11 @@ exports.updateOrder = catchAsync(async (req, res, next) => {
   );
 
   if (!order) {
-    return next(new AppError("Order not found with this ID", 404, "ID", "Can't found"));
+    return next(new AppError('No order found with that ID', 404));
   }
 
   res.status(200).json({
-    status: "success",
+    status: 'success',
     data: {
       order,
     },

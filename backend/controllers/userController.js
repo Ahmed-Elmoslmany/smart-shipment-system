@@ -4,15 +4,8 @@ const AppError = require("../utils/appError");
 const cloudinary = require("../utils/cloud");
 const factory = require("./factoryHandler");
 const sendEmail = require("../utils/email");
-const filterObj = (obj, ...allowedFields) => {
-  const newObj = {};
-  Object.keys(obj).forEach((el) => {
-    if (allowedFields.includes(el)) {
-      newObj[el] = obj[el];
-    }
-  });
-  return newObj;
-};
+const filterObj = require('../utils/filterObj');
+
 
 exports.uploadProfileImg = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.user._id);
