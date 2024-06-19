@@ -4,7 +4,7 @@ const AppError = require("../utils/appError");
 const cloudinary = require("../utils/cloud");
 const factory = require("./factoryHandler");
 const sendEmail = require("../utils/email");
-const filterObj = require('../utils/filterObj');
+const filterObj = require("../utils/filterObj");
 
 
 exports.uploadProfileImg = catchAsync(async (req, res, next) => {

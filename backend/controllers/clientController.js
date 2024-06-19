@@ -3,7 +3,7 @@ const User = require("../models/User")
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const APIFeatures = require("../utils/APIFeatures");
-const filterObj = require('../utils/filterObj');
+const filterObj = require("../utils/filterObj");
 
 exports.createOrder = catchAsync(async (req, res, next) => {
   const order = await Order.create({...req.body, client: req.user.id});
