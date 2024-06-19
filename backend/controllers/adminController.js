@@ -3,7 +3,9 @@ const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 
 exports.getDeliveries = catchAsync(async (req, res, next) => {
-    const deliveries = await User.find({ deliveryApproved: true });
+    const deliveries = await User.find({
+        role: { $in: ["fixed-delivery", "unorganized-delivery"] }
+    });
     res.status(200).json({
         status: "success",
         results: deliveries.length,
