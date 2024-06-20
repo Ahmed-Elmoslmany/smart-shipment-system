@@ -105,8 +105,8 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-userSchema.index({ startLoc: "2dsphere" });
-userSchema.index({ endLoc: "2dsphere" });
+userSchema.index({ "trip.startLoc": "2dsphere" });
+userSchema.index({ "trip.endLoc": "2dsphere" });
 
 userSchema.pre(/^find/, function (next) {
   this.select("-__v");
