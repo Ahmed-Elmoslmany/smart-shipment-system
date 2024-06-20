@@ -1,6 +1,18 @@
 const User = require("../models/User")
+const Order = require("../models/Order")
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
+
+exports.getOrders = catchAsync(async (req, res, next) => {
+    const orders = await Order.find();
+    res.status(200).json({
+        status: "success",
+        results: orders.length,
+        data: {
+            orders,
+        },
+    });
+});
 
 exports.getDeliveries = catchAsync(async (req, res, next) => {
     const deliveries = await User.find({
