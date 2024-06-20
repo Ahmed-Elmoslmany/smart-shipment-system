@@ -5,7 +5,14 @@ const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 
 exports.getOrders = catchAsync(async (req, res, next) => {
-  const orders = await Order.find().filter().limitFields().paginate();
+  const features = new APIFeatures(Order.find(), req.query)
+    .filter()
+    .limitFields()
+    .paginate();
+
+
+    const orders = await features.query;
+    
   res.status(200).json({
     status: "success",
     results: orders.length,
