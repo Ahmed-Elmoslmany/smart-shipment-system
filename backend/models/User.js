@@ -36,10 +36,8 @@ const userSchema = new mongoose.Schema({
     min: 10,
   },
   address: String,
-  profileImage: {
-    secureUrl: String,
-    publicId: String,
-  },
+  profileImage:String,
+  
   role: {
     type: String,
     enum: ["client", "fixed-delivery", "unorganized-delivery"],

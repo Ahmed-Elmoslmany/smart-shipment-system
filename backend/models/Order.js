@@ -92,5 +92,10 @@ const orderSchema = new mongoose.Schema({
 orderSchema.index({ startLoc: '2dsphere' });
 orderSchema.index({ endLoc: '2dsphere' });
 
+orderSchema.pre(/^find/, function(next) {
+  this.populate('client').populate('delivery');
+  next();
+});
+
 const Order = mongoose.model("Order", orderSchema);
 module.exports = Order;
