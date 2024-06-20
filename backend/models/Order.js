@@ -52,6 +52,10 @@ const orderSchema = new mongoose.Schema({
     type: String,
     required: [true, "please provide end location"]
   },
+  startLocation:{
+    type: String,
+    required: [true, "please provide start location"]
+  },
   status: {
     type: String,
     enum: ["un-picked", "picked-up", "coming", "delivered"],
