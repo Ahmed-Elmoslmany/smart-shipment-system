@@ -6,38 +6,42 @@ const factory = require("./factoryHandler");
 const sendEmail = require("../utils/email");
 const filterObj = require("../utils/filterObj");
 
-
 exports.uploadProfileImg = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.user._id);
 
-  if (req.file) {
-    const { secure_url, public_id } = await cloudinary.uploader.upload(req.file.path);
-    user.profileImage.secureUrl = secure_url;
-    user.profileImage.publicId = public_id;
-    user.save();
-  } else {
-    return next(new AppError('Please upload a profile image', 400, "profileImage", "Validation"));
-  }
+  user.profileImage = req.body.profileImage;
+
+  await user.save({ validateBeforeSave: false });
 
   res.status(200).json({
     status: "success",
     data: {
-      user
-    }
+      user,
+    },
   });
 });
 
 exports.updateMe = catchAsync(async (req, res, next) => {
   if (req.body.password || req.body.passwordConfirm) {
-    return next(new AppError('This route is not for password updates. Please use /updateMyPassword.', 400));
+    return next(
+      new AppError(
+        "This route is not for password updates. Please use /updateMyPassword.",
+        400
+      )
+    );
   }
 
-  const filteredBody = filterObj(req.body, 'name', 'email', 'phone');
-  
+  const filteredBody = filterObj(req.body, "name", "email", "phone", "address");
+
   if (filteredBody.email && filteredBody.email !== req.user.email) {
     const existingUser = await User.findOne({ email: filteredBody.email });
     if (existingUser) {
-      return next(new AppError('This email is already in use. Please use another email.', 400));
+      return next(
+        new AppError(
+          "This email is already in use. Please use another email.",
+          400
+        )
+      );
     }
 
     const updatedUser = await User.findById(req.user.id);
@@ -58,7 +62,8 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 
       res.status(200).json({
         status: "success",
-        message: "OTP has been sent to your new email address. Please confirm your email."
+        message:
+          "OTP has been sent to your new email address. Please confirm your email.",
       });
 
       return;
@@ -67,13 +72,22 @@ exports.updateMe = catchAsync(async (req, res, next) => {
       updatedUser.otpResetExpires = undefined;
       await updatedUser.save({ validateBeforeSave: false });
 
-      return next(new AppError("There was an error sending the email. Try again later!", 500));
+      return next(
+        new AppError(
+          "There was an error sending the email. Try again later!",
+          500
+        )
+      );
     }
   } else {
-    const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
-      new: true,
-      runValidators: true,
-    });
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      filteredBody,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     res.status(200).json({
       status: "success",
@@ -94,7 +108,7 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
 
   res.status(204).json({
     status: "success",
-    data: null
+    data: null,
   });
 });
 

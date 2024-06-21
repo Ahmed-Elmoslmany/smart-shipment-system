@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema({
     min: 10,
   },
   address: String,
-  profileImage:String,
+  profileImage: String,
   
   role: {
     type: String,
@@ -110,6 +110,13 @@ userSchema.index({ "trip.endLoc": "2dsphere" });
 
 userSchema.pre(/^find/, function (next) {
   this.select("-__v");
+  next();
+});
+
+userSchema.pre("save", function (next) {
+  if (!this.profileImage) {
+    this.profileImage = `https://eu.ui-avatars.com/api/?name=${encodeURIComponent(this.name)}&size=250`;
+  }
   next();
 });
 
