@@ -31,7 +31,6 @@ const userSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    // required: [true, "Phone is required"],
     max: 12,
     min: 10,
   },
@@ -121,20 +120,16 @@ userSchema.pre("save", function (next) {
 });
 
 userSchema.pre("save", async function (next) {
-  // function will excute only if password modified
   if (!this.isModified("password")) return next();
 
-  // hashed password
   this.password = await bcrypt.hash(this.password, 12);
 
-  // no longer need passwordConfirmed because we checked confirmed before
   this.passwordConfirm = undefined;
 
   next();
 });
 
 userSchema.pre("save", async function (next) {
-  // function will excute only if password is notmodified or document is not new
   if (!this.isModified("password") || this.isNew) return next();
 
   this.passwordChangedAt = Date.now() - 1000;
@@ -142,12 +137,10 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// excute before any query starts with 'find', so include findByIdAndUpdate
 userSchema.pre(/^find/, function (next) {
   3;
 
   console.log("top:", this.otp);
-  // ex: select all users that active proberty set to true
   this.find({ $or: [{ OTP: { $exists: true } }, { active: { $ne: false } }] });
 
   next();
@@ -174,7 +167,6 @@ userSchema.methods.passwordChangedAfterCreatedToken = function (JWTTimestamp) {
 };
 
 userSchema.methods.createUserOTP = function () {
-  // Generate OTP
   const otp = randomstring.generate({
     length: 6,
     charset: "numeric",
