@@ -5,8 +5,19 @@ const cloudinary = require("../utils/cloud");
 const factory = require("./factoryHandler");
 const sendEmail = require("../utils/email");
 const filterObj = require("../utils/filterObj");
+const { isValidImageUrl } = require("../utils/validate");
 
-exports.uploadProfileImg = catchAsync(async (req, res, next) => {
+xports.uploadProfileImg = catchAsync(async (req, res, next) => {
+
+  if (!req.body.profileImage) {
+    return next(new AppError('Please provide a profile image URL', 400));
+  }
+
+  const isValidImage = await isValidImageUrl(req.body.profileImage);
+  if (!isValidImage) {
+    return next(new AppError('Invalid image URL', 400));
+  }
+
   const user = await User.findById(req.user._id);
 
   user.profileImage = req.body.profileImage;
