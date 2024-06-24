@@ -7,7 +7,7 @@ const sendEmail = require("../utils/email");
 const filterObj = require("../utils/filterObj");
 const { isValidImageUrl } = require("../utils/validate");
 
-xports.uploadProfileImg = catchAsync(async (req, res, next) => {
+exports.uploadProfileImg = catchAsync(async (req, res, next) => {
 
   if (!req.body.profileImage) {
     return next(new AppError('Please provide a profile image URL', 400));
