@@ -10,6 +10,8 @@ router.get("/getAllDeliveries", Auth.protect, Auth.restrictTo("admin"), adminCon
 router.patch("/approveDelivery", Auth.protect, Auth.restrictTo("admin"), adminController.approveDelivery)
 router.patch("/updateInfo", Auth.protect, Auth.restrictTo("admin"), adminController.updateUserInfo);
 router.patch("/banUser", Auth.protect, Auth.restrictTo("admin"), adminController.banUser);
+router.delete("/orders/:id", Auth.protect, Auth.restrictTo("admin"), adminController.deleteOrder);
+
 
 
 module.exports = router;

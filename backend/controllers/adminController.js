@@ -22,6 +22,19 @@ exports.getOrders = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.deleteOrder = catchAsync(async (req, res, next) => {
+  const order = await Order.findByIdAndDelete(req.params.id);
+
+  if (!order) {
+    return next(new AppError("Order not found", 404, "order", "Not found"));
+  }
+
+  res.status(204).json({
+    status: "success",
+    data: null,
+  });
+});
+
 exports.getDeliveries = catchAsync(async (req, res, next) => {
   const deliveries = await User.find({
     role: { $in: ["fixed-delivery", "unorganized-delivery"] },
