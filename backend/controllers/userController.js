@@ -8,14 +8,13 @@ const filterObj = require("../utils/filterObj");
 const { isValidImageUrl } = require("../utils/validate");
 
 exports.uploadProfileImg = catchAsync(async (req, res, next) => {
-
   if (!req.body.profileImage) {
     return next(new AppError('Please provide a profile image URL', 400));
   }
 
   const isValidImage = await isValidImageUrl(req.body.profileImage);
   if (!isValidImage) {
-    return next(new AppError('Invalid image URL', 400));
+    return next(new AppError('Invalid image URL. Please try another image.', 400));
   }
 
   const user = await User.findById(req.user._id);
@@ -31,7 +30,6 @@ exports.uploadProfileImg = catchAsync(async (req, res, next) => {
     },
   });
 });
-
 exports.updateMe = catchAsync(async (req, res, next) => {
   if (req.body.password || req.body.passwordConfirm) {
     return next(

@@ -16,16 +16,11 @@ const isValidUrl = (url) => {
  * @returns {boolean} - True if the URL is a valid image URL, false otherwise.
  */
 const isValidImageUrl = async (url) => {
-  if (!isValidUrl(url)) return false;
-
-  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp'];
-  const urlExtension = url.split('.').pop();
-  const isImageExtension = imageExtensions.some(ext => url.toLowerCase().endsWith(ext));
-
-  if (!isImageExtension) return false;
+  if (!isValidUrl(url)) {
+    return false;
+  }
 
   try {
-
     const response = await axios.head(url);
     const contentType = response.headers['content-type'];
     return contentType.startsWith('image/');
