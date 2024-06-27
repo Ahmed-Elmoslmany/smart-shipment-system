@@ -171,16 +171,55 @@ exports.changeDeliveryTrip = catchAsync(async (req, res, next) => {
 
   if (!user) {
     return next(new AppError('User not found', 404, 'id', 'Validation'));
-  };
+  }
 
   if (indexToChange > -1 && indexToChange < user.trip.length) {
     user.trip[indexToChange] = { ...user.trip[indexToChange], ...req.body};
-  };
+  }
 
   await user.save();
 
   res.status(200).json({
     status: "success",
     message: "Trip changed successfully",
+  });
+});
+
+exports.getDeliveryTrips = catchAsync(async (req, res, next) => {
+  const id = req.user.id;
+  
+  const user = await User.findById(id);
+
+  if (!user) {
+    return next(new AppError('User not found', 404, 'id', 'Validation'));
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      trips: user.trip,
+    },
+  });
+});
+
+exports.getTripByIndex = catchAsync(async (req, res, next) => {
+  const id = req.user.id;
+  const index = parseInt(req.params.index, 10);
+
+  const user = await User.findById(id);
+
+  if (!user) {
+    return next(new AppError('User not found', 404, 'id', 'Validation'));
+  }
+
+  if (index < 0 || index >= user.trip.length) {
+    return next(new AppError('Trip not found', 404, 'index', 'Validation'));
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      trip: user.trip[index],
+    },
   });
 });
