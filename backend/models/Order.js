@@ -81,6 +81,10 @@ const orderSchema = new mongoose.Schema({
   quantity: Number,
   description: String,
   price: Number,
+  paidStatus:{
+    type: String,
+    default: "un-paid",
+  },
   delivery: [
     {
       type: mongoose.Schema.Types.ObjectId,

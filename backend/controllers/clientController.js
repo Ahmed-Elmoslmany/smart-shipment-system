@@ -4,9 +4,18 @@ const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const APIFeatures = require("../utils/APIFeatures");
 const filterObj = require("../utils/filterObj");
+const calculateDistance = require("../utils/distanceUtils");
 
 exports.createOrder = catchAsync(async (req, res, next) => {
-  const order = await Order.create({ ...req.body, client: req.user.id });
+  const [lng1, lat1] = req.body.startLoc.coordinates;
+  const [lng2, lat2] = req.body.endLoc.coordinates;
+  const dis = calculateDistance(lat1, lng1, lat2, lng2) / 1000;
+
+  let order = await Order.create({ ...req.body, client: req.user.id });
+
+  order.price = dis < 20 ? 20 : Math.ceil(dis * 0.5);
+
+  order.save();
 
   res.status(201).json({
     status: "success",
@@ -43,7 +52,7 @@ exports.nearestDelivery = catchAsync(async (req, res, next) => {
   const availableDelivery = delivery.filter((user) =>
     user.trip.some((trip) => trip.endState === endLocation)
   );
-  
+
   if (!availableDelivery)
     return next(
       new AppError(
@@ -53,7 +62,6 @@ exports.nearestDelivery = catchAsync(async (req, res, next) => {
         "Can't found"
       )
     );
-  // console.log(delivery);
 
   res.status(200).json({
     status: "success",
@@ -141,5 +149,100 @@ exports.deleteOrder = catchAsync(async (req, res, next) => {
   res.status(204).json({
     status: "success",
     data: null,
+  });
+});
+
+exports.checkout = catchAsync(async (req, res, next) => {
+  const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
+  const order_id = req.params.id;
+
+  const order = await Order.findById(order_id);
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency: "EGP",
+            product_data: {
+              name: `order type: ${order.type}\n order id: ${order._id}`,
+            },
+            unit_amount: order.price * 100,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+
+      success_url: `https://smart-shipment-system.vercel.com/${order.id}/success`,
+      cancel_url: `https://smart-shipment-system.vercel.com/${order.id}/cancel`,
+    });
+
+    // res.json({ id: session. });
+
+    // if()
+    console.log(session);
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        id: session.id,
+        url: session.url,
+        seccess_url: session.success_url,
+        cancel_url: session.cancel_url,
+        total_amount: session.amount_total,
+        total_details: session.total_details,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    new AppError(
+      "Can't proccess payment on this moment please try again later",
+      500,
+      "paymanet",
+      "issue"
+    );
+  }
+});
+
+exports.success = catchAsync(async (req, res, next) => {
+  const order_id = req.params.id;
+
+  const order = await Order.findById(order_id);
+
+  order.status = "delivered";
+  order.paidStatus = "paid";
+
+  order.unPicked = false;
+  order.pickedUp = false;
+  order.coming = false;
+  order.delivered = true;
+
+  order.save();
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      order,
+    },
+  });
+});
+
+exports.cancel = catchAsync(async (req, res, next) => {
+  const order_id = req.params.id;
+
+  const order = await Order.findById(order_id);
+
+  order.paidStatus = "canceled";
+
+  order.save();
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      order,
+    },
   });
 });
