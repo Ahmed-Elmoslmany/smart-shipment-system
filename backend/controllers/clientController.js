@@ -27,7 +27,7 @@ exports.createOrder = catchAsync(async (req, res, next) => {
 
 exports.nearestDelivery = catchAsync(async (req, res, next) => {
   const [lng, lat] = req.query.startLocation.split(",");
-  const endLocation = req.query.endLocation;
+  const endState = req.query.endState;
   const maxDis = req.query.maxDis;
 
   const delivery = await User.find({
@@ -48,15 +48,15 @@ exports.nearestDelivery = catchAsync(async (req, res, next) => {
         "Can't found"
       )
     );
-
+  // console.log(delivery);
   const availableDelivery = delivery.filter((user) =>
-    user.trip.some((trip) => trip.endState === endLocation)
+    user.trip.some((trip) => trip.endState === endState)
   );
 
   if (!availableDelivery)
     return next(
       new AppError(
-        `There is no delivery can going to ${endLocation}, We will notify if they there`,
+        `There is no delivery can going to ${endState}, We will notify if they there`,
         400,
         "Delivery",
         "Can't found"
@@ -246,3 +246,75 @@ exports.cancel = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.chainDeliveries = catchAsync(async (req, res, next) => {
+  const { orderStartState, orderEndState } = req.query;
+
+  if (!orderStartState || !orderEndState) {
+    return res
+      .status(400)
+      .json({
+        error: "Please provide both orderStartState and orderEndState.",
+      });
+  }
+
+  const chain = await findDeliveryChain(orderStartState, orderEndState);
+
+  res.status(200).json({
+    status: "success",
+    results: chain.length,
+    data: {
+      deliveries: chain,
+    },
+  });
+});
+
+const findDeliveryChain = async (orderStartState, orderEndState) => {
+  const deliveries = await User.find({ role: "fixed-delivery" }).select("trip");
+
+  const startDelivery = deliveries.find((delivery) => {
+    return delivery.trip.some((trip) => trip.startState === orderStartState);
+  });
+
+  if (!startDelivery) {
+    new AppError(
+      "There is no delivery can start from this state",
+      404,
+      "not-found",
+      "issue"
+    );
+  }
+
+  const chain = [];
+  let currentEndState = orderStartState;
+
+  while (true) {
+    const nextDelivery = deliveries.find((delivery) =>
+      delivery.trip.some((trip) => trip.startState === currentEndState)
+    );
+
+    if (!nextDelivery) {
+      new AppError(
+        "There is no delivery can start from this state",
+        400,
+        "not-found",
+        "issue"
+      );
+    
+    }
+
+    const trip = nextDelivery.trip.find(
+      (trip) => trip.startState === currentEndState
+    );
+
+    chain.push(trip);
+
+    if (trip.endState === orderEndState) {
+      break;
+    }
+
+    currentEndState = trip.endState;
+  }
+
+  return chain;
+};

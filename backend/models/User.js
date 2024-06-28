@@ -14,6 +14,20 @@ const pointSchema = new mongoose.Schema({
   },
 });
 
+const tripSchema = new mongoose.Schema({
+  startLoc: {
+    type: pointSchema,
+  },
+  endLoc: {
+    type: pointSchema,
+  },
+  startState: String,
+  endState: String,
+  time: String,
+  duration: String,
+  day: String,
+});
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -23,7 +37,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, "Email is required"],
     unique: true,
-    lowercase:true,
+    lowercase: true,
     validate: {
       validator: validator.isEmail,
       message: "Please use a valid email address.",
@@ -36,18 +50,13 @@ const userSchema = new mongoose.Schema({
   },
   address: String,
   profileImage: String,
-  
   role: {
     type: String,
     enum: ["client", "fixed-delivery", "unorganized-delivery"],
   },
-
-  // Unorganized Delivery
   currentState: {
     type: pointSchema,
   },
-
-  // Common on Unorganized and fixed delivery
   vehicleType: String,
   vehicleLicenseImg: String,
   deliveryApprovalImg: String,
@@ -55,24 +64,7 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-
-  // Fixed Delivery
-  trip: [
-    {
-      startLoc: {
-        type: pointSchema,
-      },
-      endLoc: {
-        type: pointSchema,
-      },
-      startState: String,
-      endState: String,
-      time: String,
-      duration: String,
-      day: String,
-    },
-  ],
-
+  trip: [tripSchema],
   password: {
     type: String,
     require: [true, "User must have a password"],
