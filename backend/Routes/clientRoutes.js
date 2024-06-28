@@ -8,8 +8,8 @@ router.get("/nearestDelivery", Auth.protect, Auth.restrictTo("client"), clientOr
 router.post("/createOrder", Auth.protect, Auth.restrictTo("client"), clientOrders.createOrder)
 router.get("/getAllOrders", Auth.protect, Auth.restrictTo("client"), clientOrders.getAllOrders);
 
-router.post('/:id/success', Auth.protect, Auth.restrictTo("client"), clientOrders.checkout);
-router.post('/:id/cancel', Auth.protect, Auth.restrictTo("client"), clientOrders.checkout);
+router.patch('/:id/success', Auth.protect, Auth.restrictTo("client"), clientOrders.success);
+router.patch('/:id/cancel', Auth.protect, Auth.restrictTo("client"), clientOrders.cancel);
 router.post('/:id/checkout', Auth.protect, Auth.restrictTo("client"), clientOrders.checkout);
 
 //some get,update,delete routes !
