@@ -18,6 +18,12 @@ dotenv.config({ path: "./config.env" });
 
 const app = express();
 
+app.use((req, res, next) => {
+  req.setTimeout(500000); // 5 seconds
+  res.setTimeout(5000); // 5 seconds
+  next();
+});
+
 app.use(cors());
 app.use(morgan("dev"));
 
