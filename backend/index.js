@@ -42,7 +42,7 @@ mongoose
   .then(() => {
     console.log("Connected successfully");
   });
-
-app.listen(3000, "127.0.0.1", () => {
-  console.log("Server is running on port 3000");
+const server = app.listen(3000, "127.0.0.1", () => {
+  console.log(`Server is running on port 3000`);
 });
+server.setTimeout(120000);
