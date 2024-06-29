@@ -11,19 +11,28 @@ exports.createOrder = catchAsync(async (req, res, next) => {
   const [lng2, lat2] = req.body.endLoc.coordinates;
   const dis = calculateDistance(lat1, lng1, lat2, lng2) / 1000;
 
-  let order = await Order.create({ ...req.body, client: req.user.id });
 
-  order.price = dis < 20 ? 20 : Math.ceil(dis * 0.5);
+  const priceInPiasters = dis < 20 ? 2000 : Math.ceil(dis * 0.25 * 100);
+  const priceCeiled = Math.ceil(priceInPiasters / 100) * 100; 
 
-  order.save();
+  let order = await Order.create({
+    ...req.body,
+    client: req.user.id,
+    price: priceCeiled 
+  });
 
   res.status(201).json({
     status: "success",
     data: {
-      order,
+      order: {
+        ...order.toObject(),
+        price: (order.price / 100).toFixed(2) 
+      },
     },
   });
 });
+
+
 
 exports.nearestDelivery = catchAsync(async (req, res, next) => {
   const [lng, lat] = req.query.startLocation.split(",");
@@ -154,9 +163,7 @@ exports.deleteOrder = catchAsync(async (req, res, next) => {
 
 exports.checkout = catchAsync(async (req, res, next) => {
   const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-
   const order_id = req.params.id;
-
   const order = await Order.findById(order_id);
 
   try {
@@ -169,21 +176,15 @@ exports.checkout = catchAsync(async (req, res, next) => {
             product_data: {
               name: `order type: ${order.type}\n order id: ${order._id}`,
             },
-            unit_amount: order.price * 100,
+            unit_amount: order.price, // Use the price in piasters as stored in the order
           },
           quantity: 1,
         },
       ],
       mode: "payment",
-
       success_url: `https://smart-shipment-system.vercel.com/${order.id}/success`,
       cancel_url: `https://smart-shipment-system.vercel.com/${order.id}/cancel`,
     });
-
-    // res.json({ id: session. });
-
-    // if()
-    console.log(session);
 
     res.status(200).json({
       status: "success",
@@ -192,20 +193,21 @@ exports.checkout = catchAsync(async (req, res, next) => {
         url: session.url,
         success_url: session.success_url,
         cancel_url: session.cancel_url,
-        total_amount: session.amount_total,
+        total_amount: Math.ceil(session.amount_total / 100), // Convert back to EGP and ceil to the nearest whole number
         total_details: session.total_details,
       },
     });
   } catch (err) {
     console.error(err);
-    new AppError(
-      "Can't proccess payment on this moment please try again later",
+    next(new AppError(
+      "Can't process payment at this moment, please try again later",
       500,
-      "paymanet",
+      "payment",
       "issue"
-    );
+    ));
   }
 });
+
 
 exports.success = catchAsync(async (req, res, next) => {
   const order_id = req.params.id;
