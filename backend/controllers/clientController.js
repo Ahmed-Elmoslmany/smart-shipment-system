@@ -237,7 +237,7 @@ exports.cancel = catchAsync(async (req, res, next) => {
 
   const order = await Order.findById(order_id);
 
-  order.paidStatus = "canceled";
+  order.paidStatus = "cancelled";
 
   order.save();
 
