@@ -153,23 +153,19 @@ exports.deleteOrder = catchAsync(async (req, res, next) => {
 });
 
 exports.checkout = catchAsync(async (req, res, next) => {
-  const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
   const order_id = req.params.id;
 
+  const order = await Order.findById(order_id);
+
   try {
-    const order = await Order.findById(order_id);
-
-    if (!order) {
-      return next(new AppError('Order not found', 404));
-    }
-
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
-            currency: 'EGP',
+            currency: "EGP",
             product_data: {
               name: `order type: ${order.type}\n order id: ${order._id}`,
             },
@@ -178,13 +174,19 @@ exports.checkout = catchAsync(async (req, res, next) => {
           quantity: 1,
         },
       ],
-      mode: 'payment',
+      mode: "payment",
+
       success_url: `https://smart-shipment-system.vercel.com/${order.id}/success`,
       cancel_url: `https://smart-shipment-system.vercel.com/${order.id}/cancel`,
     });
 
+    // res.json({ id: session. });
+
+    // if()
+    console.log(session);
+
     res.status(200).json({
-      status: 'success',
+      status: "success",
       data: {
         id: session.id,
         url: session.url,
@@ -196,12 +198,14 @@ exports.checkout = catchAsync(async (req, res, next) => {
     });
   } catch (err) {
     console.error(err);
-    return next(
-      new AppError("Can't process payment at this moment, please try again later", 500)
+    new AppError(
+      "Can't proccess payment on this moment please try again later",
+      500,
+      "paymanet",
+      "issue"
     );
   }
 });
-
 
 exports.success = catchAsync(async (req, res, next) => {
   const order_id = req.params.id;
