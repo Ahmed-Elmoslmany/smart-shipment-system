@@ -251,70 +251,58 @@ exports.chainDeliveries = catchAsync(async (req, res, next) => {
   const { orderStartState, orderEndState } = req.query;
 
   if (!orderStartState || !orderEndState) {
-    return res
-      .status(400)
-      .json({
-        error: "Please provide both orderStartState and orderEndState.",
-      });
+    return res.status(400).json({
+      error: "Please provide both orderStartState and orderEndState.",
+    });
   }
 
-  const chain = await findDeliveryChain(orderStartState, orderEndState);
-
-  res.status(200).json({
-    status: "success",
-    results: chain.length,
-    data: {
-      deliveries: chain,
-    },
-  });
+  try {
+    const chain = await findDeliveryChain(orderStartState, orderEndState);
+    res.status(200).json({
+      status: "success",
+      results: chain.length,
+      data: {
+        deliveries: chain,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
 });
 
 const findDeliveryChain = async (orderStartState, orderEndState) => {
   const deliveries = await User.find({ role: "fixed-delivery" }).select("trip");
 
-  const startDelivery = deliveries.find((delivery) => {
-    return delivery.trip.some((trip) => trip.startState === orderStartState);
-  });
-
-  if (!startDelivery) {
-    new AppError(
-      "There is no delivery can start from this state",
-      404,
-      "not-found",
-      "issue"
-    );
+  if (deliveries.length === 0) {
+    throw new AppError("No deliveries found", 404);
   }
 
-  const chain = [];
-  let currentEndState = orderStartState;
+  console.log(`Total deliveries found: ${deliveries.length}`);
 
-  while (true) {
-    const nextDelivery = deliveries.find((delivery) =>
-      delivery.trip.some((trip) => trip.startState === currentEndState)
-    );
+  const queue = [[{ startState: orderStartState, endState: orderStartState }]];
+  const visitedStates = new Set();
 
-    if (!nextDelivery) {
-      new AppError(
-        "There is no delivery can start from this state",
-        400,
-        "not-found",
-        "issue"
-      );
-    
+  while (queue.length > 0) {
+    const currentPath = queue.shift();
+    const currentEndState = currentPath[currentPath.length - 1].endState;
+
+    if (currentEndState === orderEndState) {
+      console.log(`Successfully found delivery chain: ${currentPath.length - 1} trips`);
+      return currentPath.slice(1); 
     }
 
-    const trip = nextDelivery.trip.find(
-      (trip) => trip.startState === currentEndState
-    );
+    visitedStates.add(currentEndState);
 
-    chain.push(trip);
-
-    if (trip.endState === orderEndState) {
-      break;
+    for (const delivery of deliveries) {
+      for (const trip of delivery.trip) {
+        if (trip.startState === currentEndState && !visitedStates.has(trip.endState)) {
+          const newPath = currentPath.concat([trip]);
+          queue.push(newPath);
+          console.log(`Exploring trip from ${trip.startState} to ${trip.endState}`);
+        }
+      }
     }
-
-    currentEndState = trip.endState;
   }
 
-  return chain;
+  throw new AppError("No valid delivery chain found", 400);
 };
