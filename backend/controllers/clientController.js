@@ -12,7 +12,7 @@ exports.createOrder = catchAsync(async (req, res, next) => {
   const dis = calculateDistance(lat1, lng1, lat2, lng2) / 1000;
 
 
-  const priceInPiasters = dis < 20 ? 2000 : Math.ceil(dis * 0.25 * 100);
+  const priceInPiasters = dis < 20 ? 2000 : Math.ceil(dis * 0.5 * 100);
   const priceCeiled = Math.ceil(priceInPiasters / 100) * 100; 
 
   let order = await Order.create({
