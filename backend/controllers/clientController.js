@@ -166,47 +166,39 @@ exports.checkout = catchAsync(async (req, res, next) => {
   const order_id = req.params.id;
   const order = await Order.findById(order_id);
 
-  try {
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "EGP",
-            product_data: {
-              name: `order type: ${order.type}\n order id: ${order._id}`,
-            },
-            unit_amount: order.price, // Use the price in piasters as stored in the order
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ["card"],
+    line_items: [
+      {
+        price_data: {
+          currency: "EGP",
+          product_data: {
+            name: `Order type: ${order.type}\nOrder ID: ${order._id}`,
           },
-          quantity: 1,
+          unit_amount: order.price, // Use the price in piasters as stored in the order
         },
-      ],
-      mode: "payment",
-      success_url: `https://smart-shipment-system.vercel.com/${order.id}/success`,
-      cancel_url: `https://smart-shipment-system.vercel.com/${order.id}/cancel`,
-    });
-
-    res.status(200).json({
-      status: "success",
-      data: {
-        id: session.id,
-        url: session.url,
-        success_url: session.success_url,
-        cancel_url: session.cancel_url,
-        total_amount: Math.ceil(session.amount_total / 100), // Convert back to EGP and ceil to the nearest whole number
-        total_details: session.total_details,
+        quantity: 1,
       },
-    });
-  } catch (err) {
-    console.error(err);
-    next(new AppError(
-      "Can't process payment at this moment, please try again later",
-      500,
-      "payment",
-      "issue"
-    ));
-  }
+    ],
+    mode: "payment",
+    success_url: `https://smart-shipment-system.vercel.com/${order.id}/success`,
+    cancel_url: `https://smart-shipment-system.vercel.com/${order.id}/cancel`,
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      id: session.id,
+      url: session.url,
+      success_url: session.success_url,
+      cancel_url: session.cancel_url,
+      total_amount: Math.ceil(session.amount_total / 100), // Convert back to EGP and ceil to the nearest whole number
+      total_details: session.total_details,
+    },
+  });
 });
+
+
 
 
 exports.success = catchAsync(async (req, res, next) => {
@@ -253,33 +245,39 @@ exports.chainDeliveries = catchAsync(async (req, res, next) => {
   const { orderStartState, orderEndState } = req.query;
 
   if (!orderStartState || !orderEndState) {
-    return res.status(400).json({
-      error: "Please provide both orderStartState and orderEndState.",
-    });
+    return next(new AppError("Please provide both orderStartState and orderEndState.", 400));
   }
 
   try {
-    const chain = await findDeliveryChain(orderStartState, orderEndState);
+    const { chain, logs } = await findDeliveryChain(orderStartState, orderEndState);
     res.status(200).json({
       status: "success",
       results: chain.length,
       data: {
         deliveries: chain,
-      },
+        logs: logs, // Include the logs in the response body for successful requests
+      }
     });
   } catch (err) {
+    if (err instanceof AppError) {
+      // Return only status and message for AppError instances
+      return res.status(err.statusCode).json({
+        status: err.status,
+        message: err.message
+      });
+    }
     next(err);
   }
 });
 
 const findDeliveryChain = async (orderStartState, orderEndState) => {
-  const deliveries = await User.find({ role: "fixed-delivery" }).select("trip");
+  const deliveries = await User.find({ role: "fixed-delivery" }).select("trip name phone vehicleType");
 
   if (deliveries.length === 0) {
     throw new AppError("No deliveries found", 404);
   }
 
-  console.log(`Total deliveries found: ${deliveries.length}`);
+  const logs = [`Total deliveries found: ${deliveries.length}`];
 
   const queue = [[{ startState: orderStartState, endState: orderStartState }]];
   const visitedStates = new Set();
@@ -289,8 +287,21 @@ const findDeliveryChain = async (orderStartState, orderEndState) => {
     const currentEndState = currentPath[currentPath.length - 1].endState;
 
     if (currentEndState === orderEndState) {
-      console.log(`Successfully found delivery chain: ${currentPath.length - 1} trips`);
-      return currentPath.slice(1); 
+      logs.push(`Successfully found delivery chain: ${currentPath.length - 1} trips`);
+
+      const enrichedChain = currentPath.slice(1).map(trip => {
+        const delivery = deliveries.find(delivery => delivery.trip.some(t => t._id.equals(trip._id)));
+        return {
+          ...trip.toObject(), // Convert Mongoose document to plain object
+          deliveryPerson: {
+            name: delivery.name,
+            phone: delivery.phone,
+            vehicleType: delivery.vehicleType
+          }
+        };
+      });
+
+      return { chain: enrichedChain, logs };
     }
 
     visitedStates.add(currentEndState);
@@ -300,7 +311,7 @@ const findDeliveryChain = async (orderStartState, orderEndState) => {
         if (trip.startState === currentEndState && !visitedStates.has(trip.endState)) {
           const newPath = currentPath.concat([trip]);
           queue.push(newPath);
-          console.log(`Exploring trip from ${trip.startState} to ${trip.endState}`);
+          logs.push(`Exploring trip from ${trip.startState} to ${trip.endState}`);
         }
       }
     }
