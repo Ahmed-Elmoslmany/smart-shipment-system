@@ -11,6 +11,8 @@ router.patch("/approveDelivery", Auth.protect, Auth.restrictTo("admin"), adminCo
 router.patch("/updateInfo", Auth.protect, Auth.restrictTo("admin"), adminController.updateUserInfo);
 router.patch("/banUser", Auth.protect, Auth.restrictTo("admin"), adminController.banUser);
 router.delete("/orders/:id", Auth.protect, Auth.restrictTo("admin"), adminController.deleteOrder);
+router.get("/user/:id", Auth.protect, Auth.restrictTo("admin"), adminController.getUserById);
+
 
 
 

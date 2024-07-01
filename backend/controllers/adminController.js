@@ -112,3 +112,18 @@ exports.banUser = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.getUserById = catchAsync(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+  
+  if (!user) {
+    return next(new AppError("User not found", 404, "user", "Not found"));
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      user,
+    },
+  });
+});
