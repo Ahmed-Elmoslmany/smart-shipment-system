@@ -242,7 +242,7 @@ exports.cancel = catchAsync(async (req, res, next) => {
 });
 
 const findDeliveryChain = async (orderStartState, orderEndState) => {
-  const deliveries = await User.find({ role: "fixed-delivery" }).select("trip name phone vehicleType profileImage");
+  const deliveries = await User.find({ role: "fixed-delivery" }).select("trip name phone vehicleType profileImage _id");
 
   if (deliveries.length === 0) {
     throw new AppError("No deliveries found", 404);
@@ -265,6 +265,7 @@ const findDeliveryChain = async (orderStartState, orderEndState) => {
         return {
           ...trip.toObject(), // Convert Mongoose document to plain object
           deliveryPerson: {
+            _id: delivery._id,
             name: delivery.name,
             phone: delivery.phone,
             vehicleType: delivery.vehicleType,
@@ -320,4 +321,5 @@ exports.chainDeliveries = catchAsync(async (req, res, next) => {
     next(err);
   }
 });
+
 

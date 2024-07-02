@@ -83,17 +83,36 @@ exports.updateOrderStatus = catchAsync(async (req, res, next) => {
 });
 
 exports.assignOrderToMe = catchAsync(async (req, res, next) => {
-  await Order.findByIdAndUpdate(
+  const deliveryUserId = req.query.delivery;
+
+  if (!deliveryUserId) {
+    return next(new AppError("Please provide a delivery user ID.", 400));
+  }
+
+  // Fetch the delivery user details
+  const deliveryUser = await User.findById(deliveryUserId);
+
+  if (!deliveryUser) {
+    return next(new AppError("Delivery user not found.", 404));
+  }
+
+  // Update the order with the delivery user ID
+  const order = await Order.findByIdAndUpdate(
     req.params.id,
-    { delivery: req.user.id },
+    { delivery: deliveryUserId },
     { new: true }
   );
 
+  if (!order) {
+    return next(new AppError("Order not found.", 404));
+  }
+
   res.status(200).json({
     status: "success",
-    message: `Order assigned to you (${req.user.name}) successfully, please deliver it as soon as possible!`,
+    message: `Order assigned to ${deliveryUser.name} successfully, please deliver it as soon as possible!`,
   });
 });
+
 
 exports.summary = catchAsync(async (req, res, next) => {
   const features = new APIFeatures(
