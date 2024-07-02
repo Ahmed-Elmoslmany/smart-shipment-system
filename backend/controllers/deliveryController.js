@@ -50,7 +50,7 @@ exports.updateOrderStatus = catchAsync(async (req, res, next) => {
   try {
     let update;
     switch (status) {
-      case "pickedup":
+      case "picked-up":
         update = { status: "picked-up", pickedUp: true, unPicked: false };
         break;
 
@@ -70,17 +70,17 @@ exports.updateOrderStatus = catchAsync(async (req, res, next) => {
     
     await Order.findByIdAndUpdate(id, update, { new: true, runValidators: true });
 
+    res.status(200).json({
+      status: "success",
+      message: "Order status updated successfully",
+    });
   } catch (error) {
     return next(
       new AppError('Unable to update order status, please try again later', 500, 'database', 'Database')
     );
   }
-
-  res.status(200).json({
-    status: "success",
-    message: "Order status updated successfully",
-  });
 });
+
 
 exports.assignOrderToMe = catchAsync(async (req, res, next) => {
   const deliveryUserId = req.query.delivery;
