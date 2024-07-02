@@ -123,8 +123,17 @@ exports.summary = catchAsync(async (req, res, next) => {
     .limitFields()
     .paginate();
 
-  const orders = await features.query.populate("client");
-  const processedOrders = ordersSummary(orders);
+  const orders = await features.query;
+
+  const processedOrders = orders.map(order => ({
+    _id: order._id,
+    client: order.client.name || order.client,
+    type: order.type,
+    description: order.description,
+    status: order.status,
+    weight: order.weight,
+    quantity: order.quantity
+  }));
 
   if (processedOrders.length > 0) {
     res.status(200).json({
@@ -141,6 +150,8 @@ exports.summary = catchAsync(async (req, res, next) => {
     });
   }
 });
+
+
 
 exports.addDeliveryTrip = catchAsync(async (req, res, next) => {
   const id = req.user.id;
