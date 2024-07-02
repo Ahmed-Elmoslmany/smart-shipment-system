@@ -296,7 +296,8 @@ const findDeliveryChain = async (orderStartState, orderEndState) => {
           deliveryPerson: {
             name: delivery.name,
             phone: delivery.phone,
-            vehicleType: delivery.vehicleType
+            vehicleType: delivery.vehicleType,
+            profileImage: delivery.profileImage
           }
         };
       });
