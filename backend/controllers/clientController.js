@@ -241,6 +241,57 @@ exports.cancel = catchAsync(async (req, res, next) => {
   });
 });
 
+const findDeliveryChain = async (orderStartState, orderEndState) => {
+  const deliveries = await User.find({ role: "fixed-delivery" }).select("trip name phone vehicleType profileImage");
+
+  if (deliveries.length === 0) {
+    throw new AppError("No deliveries found", 404);
+  }
+
+  const logs = [`Total deliveries found: ${deliveries.length}`];
+
+  const queue = [[{ startState: orderStartState, endState: orderStartState }]];
+  const visitedStates = new Set();
+
+  while (queue.length > 0) {
+    const currentPath = queue.shift();
+    const currentEndState = currentPath[currentPath.length - 1].endState;
+
+    if (currentEndState === orderEndState) {
+      logs.push(`Successfully found delivery chain: ${currentPath.length - 1} trips`);
+
+      const enrichedChain = currentPath.slice(1).map(trip => {
+        const delivery = deliveries.find(delivery => delivery.trip.some(t => t._id.equals(trip._id)));
+        return {
+          ...trip.toObject(), // Convert Mongoose document to plain object
+          deliveryPerson: {
+            name: delivery.name,
+            phone: delivery.phone,
+            vehicleType: delivery.vehicleType,
+            profileImage: delivery.profileImage // Add profile image here
+          }
+        };
+      });
+
+      return { chain: enrichedChain, logs };
+    }
+
+    visitedStates.add(currentEndState);
+
+    for (const delivery of deliveries) {
+      for (const trip of delivery.trip) {
+        if (trip.startState === currentEndState && !visitedStates.has(trip.endState)) {
+          const newPath = currentPath.concat([trip]);
+          queue.push(newPath);
+          logs.push(`Exploring trip from ${trip.startState} to ${trip.endState}`);
+        }
+      }
+    }
+  }
+
+  throw new AppError("No valid delivery chain found", 400);
+};
+
 exports.chainDeliveries = catchAsync(async (req, res, next) => {
   const { orderStartState, orderEndState } = req.query;
 
@@ -270,53 +321,3 @@ exports.chainDeliveries = catchAsync(async (req, res, next) => {
   }
 });
 
-const findDeliveryChain = async (orderStartState, orderEndState) => {
-  const deliveries = await User.find({ role: "fixed-delivery" }).select("trip name phone vehicleType");
-
-  if (deliveries.length === 0) {
-    throw new AppError("No deliveries found", 404);
-  }
-
-  const logs = [`Total deliveries found: ${deliveries.length}`];
-
-  const queue = [[{ startState: orderStartState, endState: orderStartState }]];
-  const visitedStates = new Set();
-
-  while (queue.length > 0) {
-    const currentPath = queue.shift();
-    const currentEndState = currentPath[currentPath.length - 1].endState;
-
-    if (currentEndState === orderEndState) {
-      logs.push(`Successfully found delivery chain: ${currentPath.length - 1} trips`);
-
-      const enrichedChain = currentPath.slice(1).map(trip => {
-        const delivery = deliveries.find(delivery => delivery.trip.some(t => t._id.equals(trip._id)));
-        return {
-          ...trip.toObject(), // Convert Mongoose document to plain object
-          deliveryPerson: {
-            name: delivery.name,
-            phone: delivery.phone,
-            vehicleType: delivery.vehicleType,
-            profileImage: delivery.profileImage
-          }
-        };
-      });
-
-      return { chain: enrichedChain, logs };
-    }
-
-    visitedStates.add(currentEndState);
-
-    for (const delivery of deliveries) {
-      for (const trip of delivery.trip) {
-        if (trip.startState === currentEndState && !visitedStates.has(trip.endState)) {
-          const newPath = currentPath.concat([trip]);
-          queue.push(newPath);
-          logs.push(`Exploring trip from ${trip.startState} to ${trip.endState}`);
-        }
-      }
-    }
-  }
-
-  throw new AppError("No valid delivery chain found", 400);
-};
