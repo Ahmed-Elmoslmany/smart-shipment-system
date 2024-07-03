@@ -72,11 +72,15 @@ exports.nearestDelivery = catchAsync(async (req, res, next) => {
       )
     );
 
+    const availableDelivery2 = availableDelivery.filter((user) =>
+      user.role === 'fixed-delivery'
+    )
+
   res.status(200).json({
     status: "success",
-    results: availableDelivery.length,
+    results: availableDelivery2.length,
     data: {
-      deliveries: availableDelivery,
+      deliveries: availableDelivery2,
     },
   });
 });
@@ -86,7 +90,7 @@ exports.nearestUnOrganizedDelivery = catchAsync(async (req, res, next) => {
   const maxDis = req.query.maxDis;
 
   const delivery = await User.find({
-    "trip.startLoc": {
+    "currentState": {
       $near: {
         $geometry: { type: "Point", coordinates: [lng, lat] },
         $maxDistance: maxDis * 1,
@@ -104,13 +108,17 @@ exports.nearestUnOrganizedDelivery = catchAsync(async (req, res, next) => {
       )
     );
   // console.log(delivery);
+
+  const availableDelivery = delivery.filter((user) =>
+    user.role === 'unorganized-delivery'
+  )
   
 
   res.status(200).json({
     status: "success",
-    results: delivery.length,
+    results: availableDelivery.length,
     data: {
-      deliveries: delivery,
+      deliveries: availableDelivery,
     },
   });
 });
