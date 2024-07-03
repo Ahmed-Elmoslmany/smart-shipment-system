@@ -11,14 +11,13 @@ exports.createOrder = catchAsync(async (req, res, next) => {
   const [lng2, lat2] = req.body.endLoc.coordinates;
   const dis = calculateDistance(lat1, lng1, lat2, lng2) / 1000;
 
-
   const priceInPiasters = dis < 20 ? 2000 : Math.ceil(dis * 0.5 * 100);
-  const priceCeiled = Math.ceil(priceInPiasters / 100) * 100; 
+  const priceCeiled = Math.ceil(priceInPiasters / 100) * 100;
 
   let order = await Order.create({
     ...req.body,
     client: req.user.id,
-    price: priceCeiled 
+    price: priceCeiled,
   });
 
   res.status(201).json({
@@ -26,13 +25,11 @@ exports.createOrder = catchAsync(async (req, res, next) => {
     data: {
       order: {
         ...order.toObject(),
-        price: (order.price / 100).toFixed(2) 
+        price: (order.price / 100).toFixed(2),
       },
     },
   });
 });
-
-
 
 exports.nearestDelivery = catchAsync(async (req, res, next) => {
   const [lng, lat] = req.query.startLocation.split(",");
@@ -72,9 +69,9 @@ exports.nearestDelivery = catchAsync(async (req, res, next) => {
       )
     );
 
-    const availableDelivery2 = availableDelivery.filter((user) =>
-      user.role === 'fixed-delivery'
-    )
+  const availableDelivery2 = availableDelivery.filter(
+    (user) => user.role === "fixed-delivery"
+  );
 
   res.status(200).json({
     status: "success",
@@ -90,7 +87,7 @@ exports.nearestUnOrganizedDelivery = catchAsync(async (req, res, next) => {
   const maxDis = req.query.maxDis;
 
   const delivery = await User.find({
-    "currentState": {
+    currentState: {
       $near: {
         $geometry: { type: "Point", coordinates: [lng, lat] },
         $maxDistance: maxDis * 1,
@@ -109,10 +106,9 @@ exports.nearestUnOrganizedDelivery = catchAsync(async (req, res, next) => {
     );
   // console.log(delivery);
 
-  const availableDelivery = delivery.filter((user) =>
-    user.role === 'unorganized-delivery'
-  )
-  
+  const availableDelivery = delivery.filter(
+    (user) => user.role === "unorganized-delivery"
+  );
 
   res.status(200).json({
     status: "success",
@@ -242,9 +238,6 @@ exports.checkout = catchAsync(async (req, res, next) => {
   });
 });
 
-
-
-
 exports.success = catchAsync(async (req, res, next) => {
   const order_id = req.params.id;
 
@@ -285,39 +278,10 @@ exports.cancel = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.chainDeliveries = catchAsync(async (req, res, next) => {
-  const { orderStartState, orderEndState } = req.query;
-
-  if (!orderStartState || !orderEndState) {
-    return res.status(400).json({
-      error: "Please provide both orderStartState and orderEndState.",
-    });
-  }
-
-  try {
-    const chain = await findDeliveryChain(orderStartState, orderEndState);
-    
-    // Modify chain to include only the specific trip within each delivery
-    const deliveries = chain.map(entry => ({
-      ...entry.delivery._doc,
-      trip: entry.trip
-    }));
-
-    console.log(deliveries);
-    res.status(200).json({
-      status: "success",
-      results: deliveries.length,
-      data: {
-        deliveries: deliveries,
-      },
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
 const findDeliveryChain = async (orderStartState, orderEndState) => {
-  const deliveries = await User.find({ role: "fixed-delivery" }).select("trip name phone vehicleType profileImage _id");
+  const deliveries = await User.find({ role: "fixed-delivery" }).select(
+    "trip name phone vehicleType profileImage _id"
+  );
 
   if (deliveries.length === 0) {
     throw new AppError("No deliveries found", 404);
@@ -333,10 +297,14 @@ const findDeliveryChain = async (orderStartState, orderEndState) => {
     const currentEndState = currentPath[currentPath.length - 1].endState;
 
     if (currentEndState === orderEndState) {
-      logs.push(`Successfully found delivery chain: ${currentPath.length - 1} trips`);
+      logs.push(
+        `Successfully found delivery chain: ${currentPath.length - 1} trips`
+      );
 
-      const enrichedChain = currentPath.slice(1).map(trip => {
-        const delivery = deliveries.find(delivery => delivery.trip.some(t => t._id.equals(trip._id)));
+      const enrichedChain = currentPath.slice(1).map((trip) => {
+        const delivery = deliveries.find((delivery) =>
+          delivery.trip.some((t) => t._id.equals(trip._id))
+        );
         return {
           ...trip.toObject(), // Convert Mongoose document to plain object
           deliveryPerson: {
@@ -344,8 +312,8 @@ const findDeliveryChain = async (orderStartState, orderEndState) => {
             name: delivery.name,
             phone: delivery.phone,
             vehicleType: delivery.vehicleType,
-            profileImage: delivery.profileImage // Add profile image here
-          }
+            profileImage: delivery.profileImage, // Add profile image here
+          },
         };
       });
 
@@ -356,10 +324,15 @@ const findDeliveryChain = async (orderStartState, orderEndState) => {
 
     for (const delivery of deliveries) {
       for (const trip of delivery.trip) {
-        if (trip.startState === currentEndState && !visitedStates.has(trip.endState)) {
+        if (
+          trip.startState === currentEndState &&
+          !visitedStates.has(trip.endState)
+        ) {
           const newPath = currentPath.concat([trip]);
           queue.push(newPath);
-          logs.push(`Exploring trip from ${trip.startState} to ${trip.endState}`);
+          logs.push(
+            `Exploring trip from ${trip.startState} to ${trip.endState}`
+          );
         }
       }
     }
@@ -372,29 +345,35 @@ exports.chainDeliveries = catchAsync(async (req, res, next) => {
   const { orderStartState, orderEndState } = req.query;
 
   if (!orderStartState || !orderEndState) {
-    return next(new AppError("Please provide both orderStartState and orderEndState.", 400));
+    return next(
+      new AppError(
+        "Please provide both orderStartState and orderEndState.",
+        400
+      )
+    );
   }
 
   try {
-    const { chain, logs } = await findDeliveryChain(orderStartState, orderEndState);
+    const { chain, logs } = await findDeliveryChain(
+      orderStartState,
+      orderEndState
+    );
     res.status(200).json({
       status: "success",
       results: chain.length,
       data: {
         deliveries: chain,
         logs: logs, // Include the logs in the response body for successful requests
-      }
+      },
     });
   } catch (err) {
     if (err instanceof AppError) {
       // Return only status and message for AppError instances
       return res.status(err.statusCode).json({
         status: err.status,
-        message: err.message
+        message: err.message,
       });
     }
     next(err);
   }
 });
-
-
