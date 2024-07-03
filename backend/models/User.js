@@ -57,17 +57,6 @@ const userSchema = new mongoose.Schema({
   currentState: {
     type: pointSchema,
   },
-<<<<<<< Updated upstream
-=======
-
-  // Unorganized Delivery
-  currentState: {
-    type: pointSchema,
-    required: true
-  },
-
-  // Common on Unorganized and fixed delivery
->>>>>>> Stashed changes
   vehicleType: String,
   vehicleLicenseImg: String,
   deliveryApprovalImg: String,
@@ -75,25 +64,7 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-<<<<<<< Updated upstream
   trip: [tripSchema],
-=======
-
-  // Fixed Delivery
-  startLoc: {
-    type: pointSchema,
-    required: true
-  },
-  endLoc: {
-    type: pointSchema,
-    required: true
-  },
-  startState: String,
-  endState: String,
-  tripTime: String,
-  tripPeriod: Array,
-
->>>>>>> Stashed changes
   password: {
     type: String,
     require: [true, "User must have a password"],
