@@ -153,6 +153,7 @@ exports.summary = catchAsync(async (req, res, next) => {
 
 
 
+<<<<<<< Updated upstream
 exports.addDeliveryTrip = catchAsync(async (req, res, next) => {
   const id = req.user.id;
   
@@ -253,3 +254,5 @@ exports.getTripByIndex = catchAsync(async (req, res, next) => {
     },
   });
 });
+=======
+>>>>>>> Stashed changes

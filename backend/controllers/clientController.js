@@ -117,7 +117,9 @@ exports.nearestUnOrganizedDelivery = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     results: availableDelivery.length,
+    results: availableDelivery.length,
     data: {
+      deliveries: availableDelivery,
       deliveries: availableDelivery,
     },
   });
