@@ -5,6 +5,7 @@ const Auth = require("../controllers/authController")
 const router = express.Router()
 
 router.get("/nearestDelivery", Auth.protect, Auth.restrictTo("client"), clientOrders.nearestDelivery)
+router.get("/nearestUnOrganizedDelivery", Auth.protect, Auth.restrictTo("client"), clientOrders.nearestUnOrganizedDelivery)
 router.get("/findPath", Auth.protect, Auth.restrictTo("client"), clientOrders.chainDeliveries)
 router.post("/createOrder", Auth.protect, Auth.restrictTo("client"), clientOrders.createOrder)
 router.get("/getAllOrders", Auth.protect, Auth.restrictTo("client"), clientOrders.getAllOrders);

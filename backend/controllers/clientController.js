@@ -81,6 +81,40 @@ exports.nearestDelivery = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.nearestUnOrganizedDelivery = catchAsync(async (req, res, next) => {
+  const [lng, lat] = req.query.currentLocation.split(",");
+  const maxDis = req.query.maxDis;
+
+  const delivery = await User.find({
+    "trip.startLoc": {
+      $near: {
+        $geometry: { type: "Point", coordinates: [lng, lat] },
+        $maxDistance: maxDis * 1,
+      },
+    },
+  });
+
+  if (!delivery)
+    return next(
+      new AppError(
+        "There is no delivery near to you, We will notify if they there",
+        400,
+        "Delivery",
+        "Can't found"
+      )
+    );
+  // console.log(delivery);
+  
+
+  res.status(200).json({
+    status: "success",
+    results: delivery.length,
+    data: {
+      deliveries: delivery,
+    },
+  });
+});
+
 exports.getAllOrders = catchAsync(async (req, res, next) => {
   let query = Order.find({ client: req.user.id });
   const features = new APIFeatures(query, req.query)
@@ -239,6 +273,37 @@ exports.cancel = catchAsync(async (req, res, next) => {
       order,
     },
   });
+});
+
+exports.chainDeliveries = catchAsync(async (req, res, next) => {
+  const { orderStartState, orderEndState } = req.query;
+
+  if (!orderStartState || !orderEndState) {
+    return res.status(400).json({
+      error: "Please provide both orderStartState and orderEndState.",
+    });
+  }
+
+  try {
+    const chain = await findDeliveryChain(orderStartState, orderEndState);
+    
+    // Modify chain to include only the specific trip within each delivery
+    const deliveries = chain.map(entry => ({
+      ...entry.delivery._doc,
+      trip: entry.trip
+    }));
+
+    console.log(deliveries);
+    res.status(200).json({
+      status: "success",
+      results: deliveries.length,
+      data: {
+        deliveries: deliveries,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
 });
 
 const findDeliveryChain = async (orderStartState, orderEndState) => {

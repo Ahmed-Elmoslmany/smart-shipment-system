@@ -99,7 +99,7 @@ exports.assignOrderToMe = catchAsync(async (req, res, next) => {
   // Update the order with the delivery user ID
   const order = await Order.findByIdAndUpdate(
     req.params.id,
-    { delivery: deliveryUserId },
+    { delivery: req.body.delivery_id || req.user.id },
     { new: true }
   );
 
