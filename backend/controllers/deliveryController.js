@@ -99,7 +99,7 @@ exports.assignOrderToMe = catchAsync(async (req, res, next) => {
   // Update the order with the delivery user ID
   const order = await Order.findByIdAndUpdate(
     req.params.id,
-    { delivery: req.body.delivery_id || req.user.id },
+    { delivery: deliveryUserId }, 
     { new: true }
   );
 
@@ -112,6 +112,7 @@ exports.assignOrderToMe = catchAsync(async (req, res, next) => {
     message: `Order assigned to ${deliveryUser.name} successfully, please deliver it as soon as possible!`,
   });
 });
+
 
 
 exports.summary = catchAsync(async (req, res, next) => {
