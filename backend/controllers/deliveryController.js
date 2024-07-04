@@ -117,7 +117,7 @@ exports.assignOrderToMe = catchAsync(async (req, res, next) => {
 
 exports.summary = catchAsync(async (req, res, next) => {
   const features = new APIFeatures(
-    Order.find({ delivery: req.user.id }).populate('client'), // Populate client details
+    Order.find({ delivery: req.user.id }), 
     req.query
   )
     .filter()
@@ -128,8 +128,8 @@ exports.summary = catchAsync(async (req, res, next) => {
 
   const processedOrders = orders.map(order => ({
     _id: order._id,
-    recipentName: order.recipentName, // Correct the field name to match your schema
-    reciepentPhone: order.reciepentPhone, // Correct the field name to match your schema
+    recipentName: order.recipentName,
+    reciepentPhone: order.reciepentPhone,
     type: order.type,
     description: order.description,
     status: order.status,
@@ -153,6 +153,7 @@ exports.summary = catchAsync(async (req, res, next) => {
     });
   }
 });
+
 
 
 
