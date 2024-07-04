@@ -128,16 +128,14 @@ exports.summary = catchAsync(async (req, res, next) => {
 
   const processedOrders = orders.map(order => ({
     _id: order._id,
-    client: {
-      name: order.client.name,
-      phone: order.client.phone,
-    },
+    recipentName: order.recipentName, // Correct the field name to match your schema
+    reciepentPhone: order.reciepentPhone, // Correct the field name to match your schema
     type: order.type,
     description: order.description,
     status: order.status,
     weight: order.weight,
     quantity: order.quantity,
-    createdAt: order.createdAt,  // Assuming createdAt is already in UTC and formatted correctly
+    createdAt: order.createdAt,
   }));
 
   if (processedOrders.length > 0) {
