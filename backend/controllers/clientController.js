@@ -11,25 +11,22 @@ exports.createOrder = catchAsync(async (req, res, next) => {
   const [lng2, lat2] = req.body.endLoc.coordinates;
   const dis = calculateDistance(lat1, lng1, lat2, lng2) / 1000;
 
-  const priceInPiasters = dis < 20 ? 2000 : Math.ceil(dis * 0.5 * 100);
-  const priceCeiled = Math.ceil(priceInPiasters / 100) * 100;
+  const priceInPounds = dis < 20 ? 20.00 : Math.ceil(dis * 0.5 * 100) / 100;
 
   let order = await Order.create({
     ...req.body,
     client: req.user.id,
-    price: priceCeiled,
+    price: priceInPounds,
   });
 
   res.status(201).json({
     status: "success",
     data: {
-      order: {
-        ...order.toObject(),
-        price: (order.price / 100).toFixed(2),
-      },
+      order: order.toObject(),
     },
   });
 });
+
 
 exports.nearestDelivery = catchAsync(async (req, res, next) => {
   const [lng, lat] = req.query.startLocation.split(",");
@@ -206,6 +203,9 @@ exports.checkout = catchAsync(async (req, res, next) => {
   const order_id = req.params.id;
   const order = await Order.findById(order_id);
 
+  // Multiply the price by 100 to convert pounds to piasters
+  const priceInPiasters = order.price * 100;
+
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     line_items: [
@@ -215,7 +215,7 @@ exports.checkout = catchAsync(async (req, res, next) => {
           product_data: {
             name: `Order type: ${order.type}\nOrder ID: ${order._id}`,
           },
-          unit_amount: order.price, // Use the price in piasters as stored in the order
+          unit_amount: priceInPiasters, // Use the price in piasters
         },
         quantity: 1,
       },
@@ -237,6 +237,7 @@ exports.checkout = catchAsync(async (req, res, next) => {
     },
   });
 });
+
 
 exports.success = catchAsync(async (req, res, next) => {
   const order_id = req.params.id;

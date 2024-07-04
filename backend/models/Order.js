@@ -80,8 +80,16 @@ const orderSchema = new mongoose.Schema({
   weight: String,
   quantity: Number,
   description: String,
-  price: Number,
-  paidStatus:{
+  price: {
+    type: Number,
+    get: function(val) {
+      return Math.ceil(val / 100); // convert from piasters to pounds and round up
+    },
+    set: function(val) {
+      return Math.ceil(val) * 100; // convert from pounds to piasters and round up
+    },
+  },
+  paidStatus: {
     type: String,
     default: "un-paid",
   },
@@ -104,6 +112,9 @@ orderSchema.pre(/^find/, function(next) {
   this.populate('client').populate('delivery');
   next();
 });
+
+orderSchema.set('toJSON', { getters: true, virtuals: false });
+orderSchema.set('toObject', { getters: true, virtuals: false });
 
 const Order = mongoose.model("Order", orderSchema);
 module.exports = Order;
