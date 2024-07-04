@@ -117,7 +117,7 @@ exports.assignOrderToMe = catchAsync(async (req, res, next) => {
 
 exports.summary = catchAsync(async (req, res, next) => {
   const features = new APIFeatures(
-    Order.find({ delivery: req.user.id }),
+    Order.find({ delivery: req.user.id }).populate('client'), // Populate client details
     req.query
   )
     .filter()
@@ -128,12 +128,16 @@ exports.summary = catchAsync(async (req, res, next) => {
 
   const processedOrders = orders.map(order => ({
     _id: order._id,
-    client: order.client.name || order.client,
+    client: {
+      name: order.client.name,
+      phone: order.client.phone,
+    },
     type: order.type,
     description: order.description,
     status: order.status,
     weight: order.weight,
-    quantity: order.quantity
+    quantity: order.quantity,
+    createdAt: order.createdAt,  // Assuming createdAt is already in UTC and formatted correctly
   }));
 
   if (processedOrders.length > 0) {
@@ -151,6 +155,7 @@ exports.summary = catchAsync(async (req, res, next) => {
     });
   }
 });
+
 
 
 exports.addDeliveryTrip = catchAsync(async (req, res, next) => {
