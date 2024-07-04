@@ -81,13 +81,9 @@ const orderSchema = new mongoose.Schema({
   quantity: Number,
   description: String,
   price: {
-    type: Number,
-    get: function(val) {
-      return Math.ceil(val / 100); // convert from piasters to pounds and round up
-    },
-    set: function(val) {
-      return Math.ceil(val) * 100; // convert from pounds to piasters and round up
-    },
+    type: String,
+    get: (val) => (Math.ceil(val / 100)).toString(), // convert from piasters to pounds and ceil when retrieving
+    set: (val) => (Math.ceil(parseFloat(val) * 100)).toString(), // convert from pounds to piasters and ceil when storing
   },
   paidStatus: {
     type: String,
