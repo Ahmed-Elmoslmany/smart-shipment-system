@@ -221,8 +221,8 @@ exports.checkout = catchAsync(async (req, res, next) => {
       },
     ],
     mode: "payment",
-    success_url: `https://smart-shipment-system.vercel.com/${order.id}/success`,
-    cancel_url: `https://smart-shipment-system.vercel.com/${order.id}/cancel`,
+    success_url: `http://localhost:5173/${order.id}/success`, 
+    cancel_url: `http://localhost:5173/${order.id}/cancel`, 
   });
 
   res.status(200).json({
@@ -237,6 +237,7 @@ exports.checkout = catchAsync(async (req, res, next) => {
     },
   });
 });
+
 
 
 exports.success = catchAsync(async (req, res, next) => {
