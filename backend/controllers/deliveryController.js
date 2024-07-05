@@ -82,42 +82,72 @@ exports.updateOrderStatus = catchAsync(async (req, res, next) => {
 });
 
 
+
+
 exports.assignOrderToMe = catchAsync(async (req, res, next) => {
-  const deliveryUserId = req.query.delivery;
+  let deliveryUserIds = req.query.delivery;
 
-  if (!deliveryUserId) {
-    return next(new AppError("Please provide a delivery user ID.", 400));
+  if (!deliveryUserIds) {
+    return next(new AppError("Please provide delivery user IDs.", 400));
   }
 
-  // Fetch the delivery user details
-  const deliveryUser = await User.findById(deliveryUserId);
-
-  if (!deliveryUser) {
-    return next(new AppError("Delivery user not found.", 404));
+  if (!Array.isArray(deliveryUserIds)) {
+    deliveryUserIds = [deliveryUserIds];
   }
 
-  // Update the order with the delivery user ID
-  const order = await Order.findByIdAndUpdate(
-    req.params.id,
-    { delivery: deliveryUserId }, 
-    { new: true }
-  );
+  // Check if any of the delivery user IDs belong to clients
+  const clientUsers = await User.find({ _id: { $in: deliveryUserIds }, role: 'client' });
+  if (clientUsers.length > 0) {
+    const clientNames = clientUsers.map(user => user.name).join(', ');
+    return next(new AppError(`Cannot assign order to client(s): ${clientNames}.`, 400));
+  }
+
+  const deliveryUsers = await User.find({ _id: { $in: deliveryUserIds } });
+
+  if (deliveryUsers.length !== deliveryUserIds.length) {
+    return next(new AppError("One or more delivery users not found.", 404));
+  }
+
+  const order = await Order.findById(req.params.id);
 
   if (!order) {
     return next(new AppError("Order not found.", 404));
   }
 
+  // Check if any of the delivery users are already assigned to the order
+  const alreadyAssignedUsers = deliveryUsers.filter(user => order.delivery.includes(user._id));
+
+  if (alreadyAssignedUsers.length > 0) {
+    const duplicateNames = alreadyAssignedUsers.map(user => user.name).join(', ');
+    return next(new AppError(`Order is already assigned to ${duplicateNames}.`, 400));
+  }
+
+  // Add delivery user IDs to the order if they are not already present
+  deliveryUserIds.forEach(deliveryUserId => {
+    if (!order.delivery.includes(deliveryUserId)) {
+      order.delivery.push(deliveryUserId);
+    }
+  });
+
+  await order.save();
+
   res.status(200).json({
     status: "success",
-    message: `Order assigned to ${deliveryUser.name} successfully, please deliver it as soon as possible!`,
+    message: `Order assigned to ${deliveryUsers.map(user => user.name).join(', ')} successfully, please deliver it as soon as possible!`,
   });
 });
 
 
 
+
+
+
+
+
+
 exports.summary = catchAsync(async (req, res, next) => {
   const features = new APIFeatures(
-    Order.find({ delivery: req.user.id }), 
+    Order.find({ delivery: req.user.id }).populate('delivery', 'name phone'), // Populate delivery with name and phone
     req.query
   )
     .filter()
@@ -126,17 +156,26 @@ exports.summary = catchAsync(async (req, res, next) => {
 
   const orders = await features.query;
 
-  const processedOrders = orders.map(order => ({
-    _id: order._id,
-    recipentName: order.recipentName,
-    reciepentPhone: order.reciepentPhone,
-    type: order.type,
-    description: order.description,
-    status: order.status,
-    weight: order.weight,
-    quantity: order.quantity,
-    createdAt: order.createdAt,
-  }));
+  const processedOrders = orders.map(order => {
+    // Filter out the current deliveryman from the delivery array
+    const otherDeliverymen = order.delivery.filter(deliveryman => deliveryman.id !== req.user.id);
+
+    return {
+      _id: order._id,
+      recipentName: order.recipentName,
+      reciepentPhone: order.reciepentPhone,
+      type: order.type,
+      description: order.description,
+      status: order.status,
+      weight: order.weight,
+      quantity: order.quantity,
+      createdAt: order.createdAt,
+      otherDeliverymen: otherDeliverymen.map(deliveryman => ({
+        name: deliveryman.name,
+        phone: deliveryman.phone
+      }))
+    };
+  });
 
   if (processedOrders.length > 0) {
     res.status(200).json({
@@ -153,6 +192,7 @@ exports.summary = catchAsync(async (req, res, next) => {
     });
   }
 });
+
 
 
 
